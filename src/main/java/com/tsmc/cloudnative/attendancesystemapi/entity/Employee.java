@@ -42,7 +42,7 @@ public class Employee {
     @Column(name = "years_of_service", nullable = false)
     private Integer yearsOfService;
 
-    @OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @ToString.Exclude // 防止無限循環發生
     @EqualsAndHashCode.Exclude // 避免 equals 與 hashCode 遞迴
     private Set<EmployeeRole> employeeRoles = new HashSet<>();

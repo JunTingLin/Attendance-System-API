@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
 class EmployeeRepositoryTest {
@@ -57,13 +57,12 @@ class EmployeeRepositoryTest {
 
     @Test
     void testFindByEmployeeCode() {
-        Employee employee = employeeRepository.findByEmployeeCode("test123") // 到這裡只會回傳Optional<Employee> 所以要解包 Optional，若找不到資料就拋出異常
-                .orElseThrow(() -> new RuntimeException("找不到該員工"));
+        Employee employee = employeeRepository.findByEmployeeCode("test123")
+                .orElseThrow(() -> new RuntimeException("找不到該員工"));  // 到這裡只會回傳Optional<Employee> 所以要解包 Optional，若找不到資料就拋出異常
 
         List<String> roleNames = employee.getEmployeeRoles().stream()
                 .map(er -> er.getRole().getName())
                 .collect(Collectors.toList());
-
         EmployeeDTO dto = new EmployeeDTO(
                 employee.getEmployeeId(),
                 employee.getEmployeeCode(),
@@ -71,9 +70,9 @@ class EmployeeRepositoryTest {
                 roleNames
         );
 
-        System.out.println(dto);
-
-
+        assertThat(dto.getEmployeeCode()).isEqualTo("test123");
+        assertThat(dto.getEmployeeName()).isEqualTo("Test Employee");
+        assertThat(dto.getRoles()).containsExactlyInAnyOrder("EMPLOYEE");
     }
 }
 

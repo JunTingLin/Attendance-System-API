@@ -3,6 +3,7 @@ package com.tsmc.cloudnative.attendancesystemapi.security;
 import com.tsmc.cloudnative.attendancesystemapi.entity.Employee;
 import com.tsmc.cloudnative.attendancesystemapi.entity.EmployeeRole;
 import com.tsmc.cloudnative.attendancesystemapi.repository.EmployeeRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -16,11 +17,11 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Log4j2
+@RequiredArgsConstructor
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
 
-    @Autowired
-    private EmployeeRepository employeeRepository;
+    private final EmployeeRepository employeeRepository;
 
     @Override
     public UserDetails loadUserByUsername(String employeeCode) throws UsernameNotFoundException {
