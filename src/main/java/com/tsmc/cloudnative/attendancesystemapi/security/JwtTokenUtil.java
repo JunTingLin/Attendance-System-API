@@ -70,7 +70,7 @@ public class JwtTokenUtil {
 
     private Claims getAllClaimsFromToken(String token) {
         return Jwts.parserBuilder()
-                .setSigningKey(key) // Parser 也需提供 key 而非文字密鑰
+                .setSigningKey(key) // Parser 需提供 key 而非文字密鑰
                 .build()
                 .parseClaimsJws(token)
                 .getBody();

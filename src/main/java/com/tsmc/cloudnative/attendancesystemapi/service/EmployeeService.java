@@ -4,12 +4,13 @@ import com.tsmc.cloudnative.attendancesystemapi.dto.EmployeeDTO;
 import com.tsmc.cloudnative.attendancesystemapi.entity.Employee;
 import com.tsmc.cloudnative.attendancesystemapi.repository.EmployeeRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class EmployeeService {
 
@@ -33,6 +34,11 @@ public class EmployeeService {
 
     public EmployeeDTO getEmployeeDTOByCode(String employeeCode) {
         Employee employee = findEmployeeByCode(employeeCode);
+        log.debug("Employee: " + employee.getEmployeeName());
+        log.debug("EmployeeRoles size: " + employee.getEmployeeRoles().size());
+        employee.getEmployeeRoles().forEach(er -> {
+            log.debug("Role: " + (er.getRole() != null ? er.getRole().getName() : "null"));
+        });
         return convertToDTO(employee);
     }
 

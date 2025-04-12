@@ -1,16 +1,11 @@
 package com.tsmc.cloudnative.attendancesystemapi.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.tsmc.cloudnative.attendancesystemapi.common.ApiResponse;
 import com.tsmc.cloudnative.attendancesystemapi.security.CustomAccessDeniedHandler;
 import com.tsmc.cloudnative.attendancesystemapi.security.CustomAuthenticationEntryPoint;
 import com.tsmc.cloudnative.attendancesystemapi.security.JwtAuthenticationFilter;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;

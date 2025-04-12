@@ -1,9 +1,11 @@
 package com.tsmc.cloudnative.attendancesystemapi.dto;
 
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 
+@Slf4j
 @Data
 public class EmployeeDTO {
     private Integer employeeId;
