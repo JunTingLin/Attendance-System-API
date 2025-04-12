@@ -7,6 +7,7 @@ import com.tsmc.cloudnative.attendancesystemapi.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -25,6 +26,9 @@ public class AuthController {
         try {
             LoginResponseDTO response = authService.authenticateAndGenerateToken(loginRequestDTO);
             return ApiResponse.success("登入成功", response);
+        }
+        catch (AuthenticationException e) {
+            return ApiResponse.error(401, "登入失敗：" + e.getMessage());
         }
         catch (Exception e) {
             // 所有其他業務邏輯錯誤都作為 500 處理
