@@ -5,8 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -17,7 +16,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
-@Log4j2
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -31,6 +30,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         final String requestTokenHeader = request.getHeader("Authorization");
+        log.debug("收到Authorization Header: {}", requestTokenHeader);
 
         String username = null;
         String jwtToken = null;
@@ -41,23 +41,32 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 username = jwtTokenUtil.getUsernameFromToken(jwtToken);
 
             } catch (IllegalArgumentException e) {
-                log.error("無法獲取JWT Token");
+                log.error("無法獲取JWT Token: {}", e.getMessage());
             } catch (Exception  e) {
-                log.error("JWT Token已過期");
+                log.error("JWT Token驗證失敗: {} - {}", e.getClass().getName(), e.getMessage());
             }
         } else {
-            log.warn("JWT Token不以Bearer開頭");
+            log.warn("JWT Token不以Bearer開頭或不存在: {}", requestTokenHeader);
         }
 
         // 驗證token
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
+            log.debug("已加載用戶詳情: {}", userDetails.getUsername());
 
-            if (jwtTokenUtil.validateToken(jwtToken, userDetails)) {
-                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities());
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+            try {
+                boolean isValid = jwtTokenUtil.validateToken(jwtToken, userDetails);
+                log.debug("JWT Token驗證結果: {}", isValid);
+
+                if (isValid) {
+                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                            userDetails, null, userDetails.getAuthorities());
+                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                    log.debug("認證成功設置到SecurityContext");
+                }
+            } catch (Exception e) {
+                log.error("驗證Token時出錯: {}", e.getMessage());
             }
         }
         chain.doFilter(request, response);

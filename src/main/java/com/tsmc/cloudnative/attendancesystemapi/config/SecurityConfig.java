@@ -2,6 +2,8 @@ package com.tsmc.cloudnative.attendancesystemapi.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tsmc.cloudnative.attendancesystemapi.common.ApiResponse;
+import com.tsmc.cloudnative.attendancesystemapi.security.CustomAccessDeniedHandler;
+import com.tsmc.cloudnative.attendancesystemapi.security.CustomAuthenticationEntryPoint;
 import com.tsmc.cloudnative.attendancesystemapi.security.JwtAuthenticationFilter;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -33,7 +35,8 @@ import java.util.Collections;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
-    private final ObjectMapper objectMapper;
+    private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+    private final CustomAccessDeniedHandler customAccessDeniedHandler;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -48,15 +51,8 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(ex -> ex
-                        .authenticationEntryPoint((request, response, authException) -> {
-                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                            response.setCharacterEncoding("UTF-8");
-                            response.setContentType("application/json;charset=UTF-8");
-                            ApiResponse<Object> errorResponse = ApiResponse.error(HttpStatus.UNAUTHORIZED.value(), "未經授權的訪問：需要驗證");
-                            String json = objectMapper.writeValueAsString(errorResponse);
-                            response.getWriter().write(json);
-                        }));
-
+                        .authenticationEntryPoint(customAuthenticationEntryPoint)
+                        .accessDeniedHandler(customAccessDeniedHandler));
 
 
         return http.build();
