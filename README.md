@@ -37,7 +37,7 @@ mvn spring-boot:run
 
 2. **透過 IDE 執行**：
 
-如使用 Intellij IDEA 或 Eclipse，直接啟動主程式入口[AttendanceSystemApiApplication](./src/main/java/com/tsmc/cloudnative/attendancesystemapi/AttendanceSystemApiApplication.java)
+如使用 Intellij IDEA 或 Eclipse，直接啟動主程式入口[AttendanceSystemApiApplication](src/main/java/com/tsmc/cloudnative/attendancesystemapi/AttendanceSystemApiApplication.java)
 
 ---
 
@@ -102,3 +102,5 @@ Authorization: Bearer <your_JWT_token>
 
 如需更多詳細功能或 API 請參考 Swagger UI 文件，或訪問[Google Doc-Controller draft](https://docs.google.com/document/d/1ykyxhqslri5owPWKm_RMJchlDV6fuQn0eHwYQ1Lz95c/edit?tab=t.0#heading=h.2n97651aeg0t)。
 
+## 📖 開發規範建議
+ [開發注意事項與規範](docs/DEVELOPMENT_GUIDELINES.md)
