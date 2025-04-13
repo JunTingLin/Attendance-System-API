@@ -23,6 +23,28 @@ public class EmployeeService {
                 .findByEmployeeCode(employeeCode)
                 .orElseThrow(() -> new RuntimeException("員工不存在"));
     }
+
+    public List<EmployeeDTO> getPotentialProxies(String employeeCode) {
+        log.debug("開始查詢員工[{}]的潛在代理人列表", employeeCode);
+
+        Employee employee = findEmployeeByCode(employeeCode);
+        Integer departmentId = employee.getDepartment().getDepartmentId();
+        Integer positionLevel = employee.getPosition().getPositionLevel();
+        Integer employeeId = employee.getEmployeeId();
+
+        log.debug("員工部門ID: {}, 職級: {}", departmentId, positionLevel);
+
+        // 查詢同部門同職級的員工
+        List<Employee> potentialProxies = employeeRepository.findByDepartmentDepartmentIdAndPositionPositionLevelAndEmployeeIdNotOrderByEmployeeName(
+                departmentId, positionLevel, employeeId);
+
+        log.debug("找到 {} 位潛在代理人", potentialProxies.size());
+
+        return potentialProxies.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
     private EmployeeDTO convertToDTO(Employee employee) {
         // Use Optional to safely extract supervisor details
         String supervisorCode = Optional.ofNullable(employee.getSupervisor())

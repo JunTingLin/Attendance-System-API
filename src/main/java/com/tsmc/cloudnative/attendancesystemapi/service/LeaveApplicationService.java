@@ -52,6 +52,41 @@ public class LeaveApplicationService {
         return convertToResponseDTO(application);
     }
 
+    public List<LeaveApplicationListDTO> getManagerSubordinatesLeaveApplications(String managerCode) {
+        log.debug("開始查詢主管[{}]底下所有員工的請假記錄", managerCode);
+
+        // 獲取主管資訊
+        Employee manager = employeeService.findEmployeeByCode(managerCode);
+
+        // 查詢主管底下所有員工的申請，使用自訂方法
+        List<LeaveApplication> applications = leaveApplicationRepository
+                .findByEmployeeSupervisorEmployeeIdOrderByApplicationDatetimeDesc(manager.getEmployeeId());
+
+        log.debug("主管[{}]底下的員工共有{}筆請假記錄", managerCode, applications.size());
+
+        // 轉換為DTO
+        return applications.stream()
+                .map(this::convertToListDTO)
+                .collect(Collectors.toList());
+    }
+
+    public LeaveApplicationResponseDTO getManagerLeaveApplicationDetail(String managerCode, Integer applicationId) {
+        log.debug("開始查詢主管[{}]權限下的請假記錄[{}]詳情", managerCode, applicationId);
+
+        // 獲取主管資訊
+        Employee manager = employeeService.findEmployeeByCode(managerCode);
+
+        // 查詢請假記錄，確保是主管底下員工的申請
+        LeaveApplication application = leaveApplicationRepository
+                .findByApplicationIdAndEmployeeSupervisorEmployeeId(applicationId, manager.getEmployeeId())
+                .orElseThrow(() -> new RuntimeException("請假記錄不存在或您無權限查看"));
+
+        log.debug("成功查詢到主管[{}]底下的請假記錄[{}]", managerCode, applicationId);
+
+        // 轉換為DTO
+        return convertToResponseDTO(application);
+    }
+
 
     private LeaveApplicationListDTO convertToListDTO(LeaveApplication application) {
         return new LeaveApplicationListDTO(
