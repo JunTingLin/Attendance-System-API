@@ -3,7 +3,7 @@ package com.tsmc.cloudnative.attendancesystemapi.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 
 @Data
 @Entity
@@ -23,10 +23,10 @@ public class LeaveApplication {
     private LeaveType leaveType;
 
     @Column(name = "start_datetime", nullable = false)
-    private Date startDatetime;
+    private LocalDateTime startDatetime;
 
     @Column(name = "end_datetime", nullable = false)
-    private Date endDatetime;
+    private LocalDateTime endDatetime;
 
     @Column(name = "leave_hours", nullable = false)
     private Integer leaveHours;
@@ -42,7 +42,7 @@ public class LeaveApplication {
     private String status;
 
     @Column(name = "application_datetime", nullable = false)
-    private Date applicationDatetime;
+    private LocalDateTime applicationDatetime;
 
     @ManyToOne
     @JoinColumn(name = "approver_employee_id")
@@ -52,7 +52,7 @@ public class LeaveApplication {
     private String approvalReason;
 
     @Column(name = "approval_datetime")
-    private Date approvalDatetime;
+    private LocalDateTime approvalDatetime;
 
     @Column(name = "file_path")
     private String filePath;

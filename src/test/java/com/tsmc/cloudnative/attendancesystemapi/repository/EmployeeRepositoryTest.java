@@ -83,6 +83,9 @@ class EmployeeRepositoryTest {
                 .map(s -> s.getEmployeeName())
                 .orElse(null);
 
+        List<Integer> roleIds = employee.getEmployeeRoles().stream()
+                .map(er -> er.getRole().getRoleId())
+                .collect(Collectors.toList());
         List<String> roleNames = employee.getEmployeeRoles().stream()
                 .map(er -> er.getRole().getName())
                 .collect(Collectors.toList());
@@ -90,8 +93,11 @@ class EmployeeRepositoryTest {
                 employee.getEmployeeId(),
                 employee.getEmployeeCode(),
                 employee.getEmployeeName(),
+                roleIds,
                 roleNames,
+                employee.getDepartment().getDepartmentId(),
                 employee.getDepartment().getDepartmentName(),
+                employee.getPosition().getPositionId(),
                 employee.getPosition().getPositionName(),
                 supervisorCode,
                 supervisorName,
@@ -101,7 +107,7 @@ class EmployeeRepositoryTest {
 
         assertThat(dto.getEmployeeCode()).isEqualTo("test123");
         assertThat(dto.getEmployeeName()).isEqualTo("Test Employee");
-        assertThat(dto.getRoles()).containsExactlyInAnyOrder("EMPLOYEE");
+        assertThat(dto.getRoleNames()).containsExactlyInAnyOrder("EMPLOYEE");
     }
 }
 

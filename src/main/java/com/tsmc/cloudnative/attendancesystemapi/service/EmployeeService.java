@@ -32,6 +32,9 @@ public class EmployeeService {
                 .map(s -> s.getEmployeeName())
                 .orElse(null);
 
+        List<Integer> roleIds = employee.getEmployeeRoles().stream()
+                .map(er -> er.getRole().getRoleId())
+                .collect(Collectors.toList());
         List<String> roleNames = employee.getEmployeeRoles().stream()
                 .map(er -> er.getRole().getName())
                 .collect(Collectors.toList());
@@ -40,8 +43,11 @@ public class EmployeeService {
                 employee.getEmployeeId(),
                 employee.getEmployeeCode(),
                 employee.getEmployeeName(),
+                roleIds,
                 roleNames,
+                employee.getDepartment().getDepartmentId(),
                 employee.getDepartment().getDepartmentName(),
+                employee.getPosition().getPositionId(),
                 employee.getPosition().getPositionName(),
                 supervisorCode,
                 supervisorName,

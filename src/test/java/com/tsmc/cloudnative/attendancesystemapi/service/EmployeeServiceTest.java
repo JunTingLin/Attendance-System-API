@@ -59,7 +59,7 @@ public class EmployeeServiceTest {
         assertThat(dto.getEmployeeId()).isEqualTo(1);
         assertThat(dto.getEmployeeCode()).isEqualTo("emp123");
         assertThat(dto.getEmployeeName()).isEqualTo("John Doe");
-        assertThat(dto.getRoles()).containsExactlyInAnyOrder("MANAGER");
+        assertThat(dto.getRoleNames()).containsExactlyInAnyOrder("MANAGER");
     }
 
     @Test

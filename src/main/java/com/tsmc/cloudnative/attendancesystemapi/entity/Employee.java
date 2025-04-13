@@ -5,7 +5,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -47,7 +47,7 @@ public class Employee {
     private Set<Employee> subordinates = new HashSet<>();
 
     @Column(name = "hire_date", nullable = false)
-    private Date hireDate;
+    private LocalDate hireDate;
 
     @Column(name = "months_of_service", nullable = false)
     private Integer monthsOfService;
