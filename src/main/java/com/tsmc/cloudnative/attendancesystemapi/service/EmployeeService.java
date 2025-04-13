@@ -7,6 +7,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -22,13 +24,29 @@ public class EmployeeService {
                 .orElseThrow(() -> new RuntimeException("員工不存在"));
     }
     private EmployeeDTO convertToDTO(Employee employee) {
+        // Use Optional to safely extract supervisor details
+        String supervisorCode = Optional.ofNullable(employee.getSupervisor())
+                .map(s -> s.getEmployeeCode())
+                .orElse(null);
+        String supervisorName = Optional.ofNullable(employee.getSupervisor())
+                .map(s -> s.getEmployeeName())
+                .orElse(null);
+
+        List<String> roleNames = employee.getEmployeeRoles().stream()
+                .map(er -> er.getRole().getName())
+                .collect(Collectors.toList());
+
         return new EmployeeDTO(
                 employee.getEmployeeId(),
                 employee.getEmployeeCode(),
                 employee.getEmployeeName(),
-                employee.getEmployeeRoles().stream()
-                        .map(er -> er.getRole().getName())
-                        .collect(Collectors.toList())
+                roleNames,
+                employee.getDepartment().getDepartmentName(),
+                employee.getPosition().getPositionName(),
+                supervisorCode,
+                supervisorName,
+                employee.getHireDate(),
+                employee.getMonthsOfService()
         );
     }
 

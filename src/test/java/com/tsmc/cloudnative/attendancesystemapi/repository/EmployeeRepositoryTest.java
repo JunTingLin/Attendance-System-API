@@ -1,9 +1,7 @@
 package com.tsmc.cloudnative.attendancesystemapi.repository;
 
 import com.tsmc.cloudnative.attendancesystemapi.dto.EmployeeDTO;
-import com.tsmc.cloudnative.attendancesystemapi.entity.Employee;
-import com.tsmc.cloudnative.attendancesystemapi.entity.EmployeeRole;
-import com.tsmc.cloudnative.attendancesystemapi.entity.Role;
+import com.tsmc.cloudnative.attendancesystemapi.entity.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,17 +25,35 @@ class EmployeeRepositoryTest {
     @Autowired
     private EmployeeRoleRepository employeeRoleRepository;
 
+    // Assume these repositories exist for setting up required entities
+    @Autowired
+    private DepartmentRepository departmentRepository;
+
+    @Autowired
+    private PositionRepository positionRepository;
+
 
     @BeforeEach
     void setup() {
+        Department department = new Department();
+        department.setDepartmentName("營運組織");
+        department.setDepartmentCode("D001");
+        departmentRepository.save(department);
+
+        Position position = new Position();
+        position.setPositionName("組織長");
+        position.setPositionLevel(4);
+        positionRepository.save(position);
+
         Employee employee = new Employee();
         employee.setEmployeeCode("test123");
         employee.setEmployeeName("Test Employee");
         employee.setPassword("testPass");
-        employee.setDepartmentId(1);
-        employee.setPositionId(1);
         employee.setHireDate(new Date());
-        employee.setYearsOfService(1);
+        employee.setMonthsOfService(1);
+        employee.setDepartment(department);
+        employee.setPosition(position);
+        employee.setSupervisor(null);
         employeeRepository.save(employee);
 
         Role role = new Role();
@@ -51,14 +67,21 @@ class EmployeeRepositoryTest {
 
         employee.getEmployeeRoles().add(employeeRole);
         employeeRepository.save(employee);
-
-
     }
+
 
     @Test
     void testFindByEmployeeCode() {
         Employee employee = employeeRepository.findByEmployeeCode("test123")
                 .orElseThrow(() -> new RuntimeException("找不到該員工"));  // 到這裡只會回傳Optional<Employee> 所以要解包 Optional，若找不到資料就拋出異常
+
+        // Use Optional to safely extract supervisor details
+        String supervisorCode = Optional.ofNullable(employee.getSupervisor())
+                .map(s -> s.getEmployeeCode())
+                .orElse(null);
+        String supervisorName = Optional.ofNullable(employee.getSupervisor())
+                .map(s -> s.getEmployeeName())
+                .orElse(null);
 
         List<String> roleNames = employee.getEmployeeRoles().stream()
                 .map(er -> er.getRole().getName())
@@ -67,7 +90,13 @@ class EmployeeRepositoryTest {
                 employee.getEmployeeId(),
                 employee.getEmployeeCode(),
                 employee.getEmployeeName(),
-                roleNames
+                roleNames,
+                employee.getDepartment().getDepartmentName(),
+                employee.getPosition().getPositionName(),
+                supervisorCode,
+                supervisorName,
+                employee.getHireDate(),
+                employee.getMonthsOfService()
         );
 
         assertThat(dto.getEmployeeCode()).isEqualTo("test123");

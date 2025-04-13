@@ -1,9 +1,7 @@
 package com.tsmc.cloudnative.attendancesystemapi.service;
 
 import com.tsmc.cloudnative.attendancesystemapi.dto.EmployeeDTO;
-import com.tsmc.cloudnative.attendancesystemapi.entity.Employee;
-import com.tsmc.cloudnative.attendancesystemapi.entity.EmployeeRole;
-import com.tsmc.cloudnative.attendancesystemapi.entity.Role;
+import com.tsmc.cloudnative.attendancesystemapi.entity.*;
 import com.tsmc.cloudnative.attendancesystemapi.repository.EmployeeRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -35,6 +33,16 @@ public class EmployeeServiceTest {
         employee.setEmployeeCode("emp123");
         employee.setEmployeeName("John Doe");
 
+        // 新增 Department 和 Position，以避免 NullPointerException
+        Department department = new Department();
+        department.setDepartmentName("Test Department");
+        department.setDepartmentCode("D001");
+        employee.setDepartment(department);
+
+        Position position = new Position();
+        position.setPositionName("Test Position");
+        employee.setPosition(position);
+
         Role role = new Role();
         role.setName("MANAGER");
         EmployeeRole employeeRole = new EmployeeRole();
@@ -45,6 +53,7 @@ public class EmployeeServiceTest {
         when(employeeRepository.findByEmployeeCode(employeeCode)).thenReturn(Optional.of(employee));
 
         EmployeeDTO dto = employeeService.getEmployeeDTOByCode(employeeCode);
+
 
         // Assert: 驗證轉換後的 DTO 是否符合預期
         assertThat(dto.getEmployeeId()).isEqualTo(1);

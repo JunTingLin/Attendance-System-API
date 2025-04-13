@@ -27,23 +27,53 @@ public class Employee {
     @Column(name = "password", nullable = false)
     private String password;
 
-    @Column(name = "department_id", nullable = false)
-    private Integer departmentId;
+    @ManyToOne
+    @JoinColumn(name = "department_id", nullable = false)
+    private Department department;
 
-    @Column(name = "position_id", nullable = false)
-    private Integer positionId;
+    @ManyToOne
+    @JoinColumn(name = "position_id", nullable = false)
+    private Position position;
 
-    @Column(name = "supervisor_id")
-    private Integer supervisorId;
+    @ManyToOne
+    @JoinColumn(name = "supervisor_id")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private Employee supervisor;
+
+    @OneToMany(mappedBy = "supervisor")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private Set<Employee> subordinates = new HashSet<>();
 
     @Column(name = "hire_date", nullable = false)
     private Date hireDate;
 
-    @Column(name = "years_of_service", nullable = false)
-    private Integer yearsOfService;
+    @Column(name = "months_of_service", nullable = false)
+    private Integer monthsOfService;
 
     @OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    @ToString.Exclude // 防止無限循環發生
-    @EqualsAndHashCode.Exclude // 避免 equals 與 hashCode 遞迴
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private Set<EmployeeRole> employeeRoles = new HashSet<>();
+
+    @OneToMany(mappedBy = "employee")
+    @ToString.Exclude // 防止無限循環發生
+    @EqualsAndHashCode.Exclude  // 避免 equals 與 hashCode 遞迴
+    private Set<EmployeeLeaveBalance> leaveBalances = new HashSet<>();
+
+    @OneToMany(mappedBy = "employee")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private Set<LeaveApplication> leaveApplications = new HashSet<>();
+
+    @OneToMany(mappedBy = "proxyEmployee")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private Set<LeaveApplication> proxyLeaveApplications = new HashSet<>();
+
+    @OneToMany(mappedBy = "approverEmployee")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private Set<LeaveApplication> approvedLeaveApplications = new HashSet<>();
 }
