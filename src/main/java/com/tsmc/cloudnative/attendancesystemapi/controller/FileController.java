@@ -1,6 +1,7 @@
 package com.tsmc.cloudnative.attendancesystemapi.controller;
 
 import com.tsmc.cloudnative.attendancesystemapi.common.ApiResponse;
+import com.tsmc.cloudnative.attendancesystemapi.dto.FileUploadResponseDTO;
 import com.tsmc.cloudnative.attendancesystemapi.service.FileService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -29,12 +30,12 @@ public class FileController {
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "上傳檔案")
-    public ApiResponse<String> uploadFile(
+    public ApiResponse<FileUploadResponseDTO> uploadFile(
             @RequestParam("file")
             @Parameter(description = "檔案", content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE))
             MultipartFile file) throws IOException {
-        String fileName = fileService.saveFile(file);
-        return ApiResponse.success("檔案上傳成功", fileName);
+        FileUploadResponseDTO fileInfo = fileService.saveFile(file);
+        return ApiResponse.success("檔案上傳成功", fileInfo);
     }
 
 

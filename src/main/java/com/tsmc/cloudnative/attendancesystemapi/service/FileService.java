@@ -3,6 +3,7 @@ package com.tsmc.cloudnative.attendancesystemapi.service;
 import com.tsmc.cloudnative.attendancesystemapi.common.FileAccessDeniedException;
 import com.tsmc.cloudnative.attendancesystemapi.common.FileNotFoundException;
 import com.tsmc.cloudnative.attendancesystemapi.common.InvalidFileTypeException;
+import com.tsmc.cloudnative.attendancesystemapi.dto.FileUploadResponseDTO;
 import com.tsmc.cloudnative.attendancesystemapi.repository.LeaveApplicationRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +35,7 @@ public class FileService {
 
     private final LeaveApplicationRepository leaveApplicationRepository;
 
-    public String saveFile(MultipartFile file) throws IOException {
+    public FileUploadResponseDTO saveFile(MultipartFile file) throws IOException {
         // 檢查檔案類型
         validateFileType(file);
 
@@ -43,6 +44,9 @@ public class FileService {
         if (!Files.exists(uploadPath)) {
             Files.createDirectories(uploadPath);
         }
+
+        // 取得原始檔案名
+        String originalFileName = file.getOriginalFilename();
 
         // 生成唯一檔案名（避免衝突）
         String uniqueFileName = UUID.randomUUID().toString();
@@ -60,10 +64,10 @@ public class FileService {
         Path filePath = uploadPath.resolve(uniqueFileName);
         Files.copy(file.getInputStream(), filePath);
 
-        log.info("檔案已上傳: {}", uniqueFileName);
+        log.info("檔案已上傳: {}, 原始檔名: {}", uniqueFileName, originalFileName);
 
-        // 返回檔案名（不包含路徑）
-        return uniqueFileName;
+
+        return new FileUploadResponseDTO(uniqueFileName, originalFileName);
     }
 
     private void validateFileType(MultipartFile file) {
