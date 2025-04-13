@@ -67,6 +67,11 @@ public class LeaveApplicationService {
 
 
     private LeaveApplicationResponseDTO convertToResponseDTO(LeaveApplication application) {
+        String fileUrl = null;
+        if (application.getFileName() != null && !application.getFileName().isEmpty()) {
+            fileUrl = application.getFilePath();
+        }
+
         return new LeaveApplicationResponseDTO(
                 application.getApplicationId(),
                 application.getEmployee().getEmployeeId(),
@@ -84,7 +89,7 @@ public class LeaveApplicationService {
                 application.getApproverEmployee() != null ? application.getApproverEmployee().getEmployeeId() : null,
                 application.getApproverEmployee() != null ? application.getApproverEmployee().getEmployeeName() : null,
                 application.getApprovalReason() != null ? application.getApprovalReason() : null,
-                application.getFilePath() != null ? application.getFilePath() : null,
+                fileUrl,
                 application.getFileName() != null ? application.getFileName() : null
         );
     }

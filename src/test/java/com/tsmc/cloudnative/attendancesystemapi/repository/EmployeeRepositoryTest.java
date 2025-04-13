@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
+import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -49,7 +50,7 @@ class EmployeeRepositoryTest {
         employee.setEmployeeCode("test123");
         employee.setEmployeeName("Test Employee");
         employee.setPassword("testPass");
-        employee.setHireDate(new Date());
+        employee.setHireDate(LocalDate.now());
         employee.setMonthsOfService(1);
         employee.setDepartment(department);
         employee.setPosition(position);

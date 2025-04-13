@@ -14,4 +14,7 @@ public interface LeaveApplicationRepository extends JpaRepository<LeaveApplicati
 
     // 查詢特定員工的特定請假記錄（確保權限控制）
     Optional<LeaveApplication> findByApplicationIdAndEmployeeEmployeeId(Integer applicationId, Integer employeeId);
+
+    // 檢查檔案是否屬於特定員工（檔案權限控制）
+    boolean existsByFilePathAndEmployeeEmployeeCode(String filePath, String employeeCode);
 }

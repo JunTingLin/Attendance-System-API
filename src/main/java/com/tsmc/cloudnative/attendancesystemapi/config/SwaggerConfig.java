@@ -30,6 +30,11 @@ public class SwaggerConfig {
                                         .name(securitySchemeName)
                                         .type(SecurityScheme.Type.HTTP)
                                         .scheme("bearer")
-                                        .bearerFormat("JWT")));
+                                        .bearerFormat("JWT"))
+                        // 增加檔案上傳用的schema
+                        .addSchemas("file", new io.swagger.v3.oas.models.media.Schema<>()
+                                .type("string")
+                                .format("binary"))
+                );
     }
 }
