@@ -40,8 +40,9 @@ public class FileController {
 
 
     @GetMapping("/download/{fileName:.+}")
+    @Operation(summary = "下載檔案")
     public ResponseEntity<Resource> downloadFile(@PathVariable String fileName, Authentication authentication) {
-        // FileService會進行權限檢查，並在需要時拋出例外
+
         Resource resource = fileService.getFileAsResource(fileName, authentication);
 
         return ResponseEntity.ok()
@@ -49,4 +50,23 @@ public class FileController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
                 .body(resource);
     }
+
+    @DeleteMapping("/{fileName:.+}")
+    @Operation(summary = "刪除檔案")
+    public ApiResponse<Boolean> deleteFile(
+            @PathVariable String fileName,
+            Authentication authentication) {
+
+        fileService.getFileAsResource(fileName, authentication);
+
+        boolean result = fileService.deleteFile(fileName);
+
+        if (result) {
+            return ApiResponse.success("檔案已成功刪除", true);
+        } else {
+            return ApiResponse.error(500, "檔案刪除失敗");
+        }
+    }
+
+
 }

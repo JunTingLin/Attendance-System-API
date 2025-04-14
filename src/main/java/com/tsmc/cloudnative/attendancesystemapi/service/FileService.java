@@ -112,7 +112,7 @@ public class FileService {
         try {
             log.debug("fileName: {}", fileName);
             // 檢查用戶權限
-            checkUserFileAccess(fileName, authentication);
+//            checkUserFileAccess(fileName, authentication);
 
             // 獲取檔案
             Path filePath = Paths.get(uploadDir).resolve(fileName).normalize();
@@ -131,7 +131,7 @@ public class FileService {
         }
     }
 
-
+//取消
     private void checkUserFileAccess(String fileName, Authentication authentication) {
         Path filePath = Paths.get(uploadDir).resolve(fileName).normalize();
         if (!Files.exists(filePath)) {
