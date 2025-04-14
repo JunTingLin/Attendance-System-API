@@ -21,7 +21,7 @@ public class EmployeeLeaveBalance {
     private LeaveType leaveType;
 
     @Column(name = "leave_year", nullable = false)
-    private Integer leave_year;
+    private Integer leaveYear;
 
     @Column(name = "total_hours", nullable = false)
     private Integer totalHours;
