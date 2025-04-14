@@ -4,6 +4,7 @@ import com.tsmc.cloudnative.attendancesystemapi.common.ApiResponse;
 import com.tsmc.cloudnative.attendancesystemapi.dto.LeaveApplicationListDTO;
 import com.tsmc.cloudnative.attendancesystemapi.dto.LeaveApplicationResponseDTO;
 import com.tsmc.cloudnative.attendancesystemapi.service.LeaveApplicationService;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -22,6 +23,7 @@ public class ManagerLeaveController {
     private final LeaveApplicationService leaveApplicationService;
 
     @GetMapping
+    @Operation(summary = "查詢主管底下所有員工的假單")
     public ApiResponse<List<LeaveApplicationListDTO>> getSubordinatesLeaveApplications(Authentication authentication) {
         String managerCode = authentication.getName();
         log.info("主管[{}]查詢所有下屬的請假記錄", managerCode);
@@ -33,6 +35,7 @@ public class ManagerLeaveController {
 
 
     @GetMapping("/{id}")
+    @Operation(summary = "查詢特定假單詳細內容")
     public ApiResponse<LeaveApplicationResponseDTO> getLeaveApplicationDetail(
             Authentication authentication,
             @PathVariable("id") Integer applicationId) {
