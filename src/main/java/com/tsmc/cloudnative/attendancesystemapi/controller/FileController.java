@@ -2,11 +2,10 @@ package com.tsmc.cloudnative.attendancesystemapi.controller;
 
 import com.tsmc.cloudnative.attendancesystemapi.common.ApiResponse;
 import com.tsmc.cloudnative.attendancesystemapi.dto.FileUploadResponseDTO;
-import com.tsmc.cloudnative.attendancesystemapi.service.FileService;
+import com.tsmc.cloudnative.attendancesystemapi.service.FileStorage;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
@@ -25,7 +24,7 @@ import java.io.IOException;
 @Slf4j
 public class FileController {
 
-    private final FileService fileService;
+    private final FileStorage fileStorage; // 注入介面，由Spring自動選擇實現
 
 
     @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -34,7 +33,7 @@ public class FileController {
             @RequestParam("file")
             @Parameter(description = "檔案", content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE))
             MultipartFile file) throws IOException {
-        FileUploadResponseDTO fileInfo = fileService.saveFile(file);
+        FileUploadResponseDTO fileInfo = fileStorage.saveFile(file);
         return ApiResponse.success("檔案上傳成功", fileInfo);
     }
 
@@ -43,7 +42,7 @@ public class FileController {
     @Operation(summary = "下載檔案")
     public ResponseEntity<Resource> downloadFile(@PathVariable String fileName, Authentication authentication) {
 
-        Resource resource = fileService.getFileAsResource(fileName, authentication);
+        Resource resource = fileStorage.getFileAsResource(fileName, authentication);
 
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
@@ -57,9 +56,9 @@ public class FileController {
             @PathVariable String fileName,
             Authentication authentication) {
 
-        fileService.getFileAsResource(fileName, authentication);
+        fileStorage.getFileAsResource(fileName, authentication);
 
-        boolean result = fileService.deleteFile(fileName);
+        boolean result = fileStorage.deleteFile(fileName);
 
         if (result) {
             return ApiResponse.success("檔案已成功刪除", true);

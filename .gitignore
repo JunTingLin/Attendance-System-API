@@ -33,4 +33,4 @@ build/
 .vscode/
 
 ### env varivale ###
-.env
+*.env
