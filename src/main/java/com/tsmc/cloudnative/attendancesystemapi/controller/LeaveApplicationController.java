@@ -1,10 +1,13 @@
 package com.tsmc.cloudnative.attendancesystemapi.controller;
 
 import com.tsmc.cloudnative.attendancesystemapi.common.ApiResponse;
+import com.tsmc.cloudnative.attendancesystemapi.dto.LeaveApplicationCreateResponseDTO;
 import com.tsmc.cloudnative.attendancesystemapi.dto.LeaveApplicationListDTO;
+import com.tsmc.cloudnative.attendancesystemapi.dto.LeaveApplicationRequestDTO;
 import com.tsmc.cloudnative.attendancesystemapi.dto.LeaveApplicationResponseDTO;
 import com.tsmc.cloudnative.attendancesystemapi.service.LeaveApplicationService;
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
@@ -46,4 +49,20 @@ public class LeaveApplicationController {
 
         return ApiResponse.success("成功獲取請假記錄詳情", application);
     }
+
+    @PostMapping("/apply")
+    @Operation(summary = "送出請假申請")
+    public ApiResponse<LeaveApplicationCreateResponseDTO> applyLeave(
+            Authentication authentication,
+            @RequestBody @Valid LeaveApplicationRequestDTO requestDTO) {
+
+        String employeeCode = authentication.getName();
+        log.info("使用者[{}]發起請假申請，假別ID:{}", employeeCode, requestDTO.getLeaveTypeId());
+
+        LeaveApplicationCreateResponseDTO response = leaveApplicationService.applyLeave(employeeCode, requestDTO);
+
+        return ApiResponse.success("請假申請成功", response);
+    }
+
+
 }
