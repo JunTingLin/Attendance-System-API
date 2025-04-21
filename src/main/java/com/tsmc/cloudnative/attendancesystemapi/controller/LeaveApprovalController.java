@@ -19,14 +19,14 @@ public class LeaveApprovalController {
 
     private final LeaveApprovalService leaveApprovalService;
 
-    @PostMapping("/{leaveId}/approve")
+    @PutMapping("/{leaveId}/approve")
     @Operation(summary = "核准價單")
     public ApiResponse<Void> approveLeave(@PathVariable Integer leaveId, @Valid @RequestBody ReviewLeaveApplicationDTO request) {
         log.info("核准假單 {}", leaveId);
         return leaveApprovalService.approveLeaveApplication(leaveId, request.getApprovalReason());
     }
 
-    @PostMapping("/{leaveId}/reject")
+    @PutMapping("/{leaveId}/reject")
     @Operation(summary = "駁回假單")
     public ApiResponse<Void> rejectLeave(@PathVariable Integer leaveId, @Valid @RequestBody ReviewLeaveApplicationDTO request) {
         log.info("駁回假單 {}", leaveId);
