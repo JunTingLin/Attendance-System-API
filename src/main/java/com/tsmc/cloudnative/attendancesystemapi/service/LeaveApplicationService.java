@@ -105,7 +105,7 @@ public class LeaveApplicationService {
                 .orElseThrow(() -> new RuntimeException("請假記錄不存在或無權限修改"));
 
         // 僅允許修改尚未審核的紀錄
-        if (!"pending".equalsIgnoreCase(application.getStatus())) {
+        if (!"待審核".equalsIgnoreCase(application.getStatus())) {
             throw new IllegalStateException("該筆請假記錄已被審核，無法修改");
         }
 
