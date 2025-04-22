@@ -52,6 +52,9 @@ public class Employee {
     @Column(name = "months_of_service", nullable = false)
     private Integer monthsOfService;
 
+    @Column(name = "notify_token")
+    private String notifyToken;
+
     @OneToMany(mappedBy = "employee", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
