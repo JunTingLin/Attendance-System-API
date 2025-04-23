@@ -65,7 +65,7 @@ public class LeaveBalanceController {
         String employeeCode = authentication.getName();
         log.info("用戶[{}]查詢其當年度假別ID[{}]的剩餘時數", employeeCode, typeId);
 
-        Integer remainingHours = leaveBalanceService.getREmainingHoursByTypeId(employeeCode, typeId);
+        Integer remainingHours = leaveBalanceService.getRemainingHoursByTypeId(employeeCode, typeId);
 
         return ApiResponse.success("成功取得剩餘時數", remainingHours);
     }
