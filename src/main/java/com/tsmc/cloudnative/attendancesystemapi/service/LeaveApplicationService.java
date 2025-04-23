@@ -1,14 +1,22 @@
 package com.tsmc.cloudnative.attendancesystemapi.service;
 
+import com.tsmc.cloudnative.attendancesystemapi.dto.LeaveApplicationCreateResponseDTO;
 import com.tsmc.cloudnative.attendancesystemapi.dto.LeaveApplicationListDTO;
+import com.tsmc.cloudnative.attendancesystemapi.dto.LeaveApplicationRequestDTO;
 import com.tsmc.cloudnative.attendancesystemapi.dto.LeaveApplicationResponseDTO;
 import com.tsmc.cloudnative.attendancesystemapi.entity.Employee;
+import com.tsmc.cloudnative.attendancesystemapi.entity.EmployeeLeaveBalance;
 import com.tsmc.cloudnative.attendancesystemapi.entity.LeaveApplication;
+import com.tsmc.cloudnative.attendancesystemapi.entity.LeaveType;
 import com.tsmc.cloudnative.attendancesystemapi.repository.LeaveApplicationRepository;
+import com.tsmc.cloudnative.attendancesystemapi.repository.LeaveTypeRepository;
+import com.tsmc.cloudnative.attendancesystemapi.repository.EmployeeLeaveBalanceRepository;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -18,6 +26,8 @@ import java.util.stream.Collectors;
 public class LeaveApplicationService {
 
     private final LeaveApplicationRepository leaveApplicationRepository;
+    private final LeaveTypeRepository leaveTypeRepository;
+    private final EmployeeLeaveBalanceRepository employeeLeaveBalanceRepository;
     private final EmployeeService employeeService;
 
     public List<LeaveApplicationListDTO> getEmployeeLeaveApplications(String employeeCode) {
@@ -127,6 +137,66 @@ public class LeaveApplicationService {
                 fileUrl,
                 application.getFileName() != null ? application.getFileName() : null
         );
+    }
+
+
+    public LeaveApplicationCreateResponseDTO applyLeave(String employeeCode, LeaveApplicationRequestDTO requestDTO){
+
+        Employee employee = employeeService.findEmployeeByCode(employeeCode);
+
+
+        // 驗證假別合法
+        LeaveType leaveType = leaveTypeRepository.findById(requestDTO.getLeaveTypeId())
+            .orElseThrow(() -> new IllegalArgumentException("無效的假別ID"));
+
+        // 驗證是否需上傳附件
+        if (Boolean.TRUE.equals(leaveType.getAttachmentRequired()) ){
+            if (requestDTO.getFilePath() == null || requestDTO.getFilePath().isBlank()){
+                throw new IllegalArgumentException("此假別需上傳附件");
+            }
+        }
+
+        int currentYear = LocalDateTime.now().getYear();
+        EmployeeLeaveBalance balance = employeeLeaveBalanceRepository
+            .findByEmployeeEmployeeIdAndLeaveTypeLeaveTypeIdAndLeaveYear(
+                employee.getEmployeeId(),
+                requestDTO.getLeaveTypeId(),
+                currentYear
+            )
+            .orElseThrow(() -> new IllegalArgumentException("查無該假別的請假餘額"));
+
+        // 驗證請假時數是否超過餘額
+        if (requestDTO.getLeaveHours() > balance.getRemainingHours()) {
+            throw new IllegalArgumentException("請假時數超過可用餘額");
+        }
+
+
+        LeaveApplication application = new LeaveApplication();
+        application.setEmployee(employee);
+        application.setLeaveType(leaveType);
+        application.setStartDatetime(requestDTO.getStartDateTime());
+        application.setEndDatetime(requestDTO.getEndDatetime());
+        application.setLeaveHours(requestDTO.getLeaveHours());
+        application.setReason(requestDTO.getReason());
+
+        application.setApplicationDatetime((LocalDateTime.now()));
+        application.setStatus("待審核");
+        application.setFilePath(requestDTO.getFilePath());
+        application.setFileName(requestDTO.getFileName());
+
+        // 取得代理人
+        if (requestDTO.getProxyEmployeeCode() != null && !requestDTO.getProxyEmployeeCode().isBlank()){
+            Employee proxy = employeeService.findEmployeeByCode(requestDTO.getProxyEmployeeCode());
+            application.setProxyEmployee(proxy);
+        }
+
+        LeaveApplication saved = leaveApplicationRepository.save(application);
+        return new LeaveApplicationCreateResponseDTO(
+            saved.getApplicationId(),
+            saved.getStatus(),
+            saved.getApplicationDatetime()
+        );
+
     }
 
 }
