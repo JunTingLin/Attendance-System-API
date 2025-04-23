@@ -1,17 +1,19 @@
 package com.tsmc.cloudnative.attendancesystemapi.service;
 
-import com.tsmc.cloudnative.attendancesystemapi.common.FileAccessDeniedException;
+
 import com.tsmc.cloudnative.attendancesystemapi.common.FileNotFoundException;
 import com.tsmc.cloudnative.attendancesystemapi.common.InvalidFileTypeException;
 import com.tsmc.cloudnative.attendancesystemapi.dto.FileUploadResponseDTO;
 import com.tsmc.cloudnative.attendancesystemapi.repository.LeaveApplicationRepository;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+
+import org.springframework.context.annotation.Profile;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -26,24 +28,30 @@ import java.util.Set;
 import java.util.UUID;
 
 @Service
+@Profile("dev")
 @Slf4j
 @RequiredArgsConstructor
-public class FileService {
+public class LocalFileStorage implements FileStorage{
 
     @Value("${file.upload-dir}")
     private String uploadDir;
 
     private final LeaveApplicationRepository leaveApplicationRepository;
 
+    @PostConstruct
+    public void init() throws IOException {
+        // 確保上傳目錄存在
+        Path path = Paths.get(uploadDir);
+        if (!Files.exists(path)) {
+            Files.createDirectories(path);
+            log.info("建立本地檔案上傳目錄: {}", uploadDir);
+        }
+    }
+
+    @Override
     public FileUploadResponseDTO saveFile(MultipartFile file) throws IOException {
         // 檢查檔案類型
         validateFileType(file);
-
-        // 確保目錄存在
-        Path uploadPath = Paths.get(uploadDir);
-        if (!Files.exists(uploadPath)) {
-            Files.createDirectories(uploadPath);
-        }
 
         // 取得原始檔案名
         String originalFileName = file.getOriginalFilename();
@@ -61,10 +69,11 @@ public class FileService {
         }
 
         // 儲存檔案
-        Path filePath = uploadPath.resolve(uniqueFileName);
-        Files.copy(file.getInputStream(), filePath);
+        Path targetPath = Paths.get(uploadDir, uniqueFileName);
+        Files.copy(file.getInputStream(), targetPath);
 
-        log.info("檔案已上傳: {}, 原始檔名: {}", uniqueFileName, originalFileName);
+
+        log.info("檔案已儲存到本地: {}, 原始檔名: {}", uniqueFileName, originalFileName);
 
 
         return new FileUploadResponseDTO(uniqueFileName, originalFileName);
@@ -107,22 +116,20 @@ public class FileService {
         }
     }
 
-
+    @Override
     public Resource getFileAsResource(String fileName, Authentication authentication) {
         try {
-            log.debug("fileName: {}", fileName);
-            // 檢查用戶權限
-//            checkUserFileAccess(fileName, authentication);
+            // 檢查用戶權限(取消)
 
-            // 獲取檔案
-            Path filePath = Paths.get(uploadDir).resolve(fileName).normalize();
-            Resource resource = new UrlResource(filePath.toUri());
-
-            if (!resource.exists()) {
+            // 從本地獲取檔案
+            Path filePath = Paths.get(uploadDir, fileName);
+            if (!Files.exists(filePath)) {
                 log.error("檔案不存在: {}", fileName);
                 throw new FileNotFoundException("檔案不存在");
             }
 
+            // 將檔案轉換為Resource
+            Resource resource = new UrlResource(filePath.toUri());
             return resource;
 
         } catch (IOException e) {
@@ -131,38 +138,7 @@ public class FileService {
         }
     }
 
-//取消
-    private void checkUserFileAccess(String fileName, Authentication authentication) {
-        Path filePath = Paths.get(uploadDir).resolve(fileName).normalize();
-        if (!Files.exists(filePath)) {
-            log.error("檔案不存在: {}", fileName);
-            throw new FileNotFoundException("檔案不存在");
-        }
-
-        String employeeCode = authentication.getName();
-
-//        // Admin可以訪問所有檔案
-//        boolean isManager = authentication.getAuthorities().contains(
-//                new SimpleGrantedAuthority("ROLE_ADMIN"));
-//
-//        if (isManager) {
-//            log.debug("管理者 {} 訪問檔案 {}", employeeCode, fileName);
-//            return;
-//        }
-
-        // 檢查該檔案是否屬於當前用戶的請假申請
-        boolean hasAccess = leaveApplicationRepository.existsByFilePathAndEmployeeEmployeeCode(
-                fileName, employeeCode);
-
-        if (!hasAccess) {
-            log.warn("用戶 {} 嘗試無權訪問檔案 {}", employeeCode, fileName);
-            throw new FileAccessDeniedException("您無權訪問此檔案");
-        }
-
-        log.debug("用戶 {} 成功訪問檔案 {}", employeeCode, fileName);
-    }
-
-
+    @Override
     public boolean deleteFile(String fileName) {
         try {
             Path filePath = Paths.get(uploadDir).resolve(fileName).normalize();
