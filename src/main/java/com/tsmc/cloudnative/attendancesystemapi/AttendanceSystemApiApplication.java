@@ -23,10 +23,6 @@ public class AttendanceSystemApiApplication {
     public void testDatabaseConnection() {
         try {
             log.info("嘗試連接資料庫...");
-            if (jdbcTemplate == null) {
-                log.error("JdbcTemplate 未正確注入，請檢查應用設定");
-                return;
-            }
             String result = jdbcTemplate.queryForObject("SELECT 1", String.class);
             log.info("資料庫連線成功: {}", result);
         } catch (Exception e) {
