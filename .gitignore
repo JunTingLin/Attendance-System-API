@@ -34,4 +34,3 @@ build/
 
 ### env varivale ###
 *.env
-.env.dev
