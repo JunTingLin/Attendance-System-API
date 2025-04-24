@@ -165,6 +165,11 @@ public class LeaveApplicationService {
             )
             .orElseThrow(() -> new IllegalArgumentException("查無該假別的請假餘額"));
 
+        // 驗證開始時間需早於結束時間
+        if (!requestDTO.getStartDateTime().isBefore(requestDTO.getEndDatetime())) {
+            throw new IllegalArgumentException("開始時間需早於結束時間");
+        }
+
         // 驗證請假時數是否超過餘額
         if (requestDTO.getLeaveHours() > balance.getRemainingHours()) {
             throw new IllegalArgumentException("請假時數超過可用餘額");
