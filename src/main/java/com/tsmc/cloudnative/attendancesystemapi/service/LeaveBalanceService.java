@@ -44,6 +44,18 @@ public class LeaveBalanceService {
                 .collect(Collectors.toList());
     }
 
+    public Integer getRemainingHoursByTypeId(String employeeCode, Integer leaveTypeId) {
+        int currentYear = LocalDate.now().getYear();
+        log.debug("查詢員工[{}]在{}年的假別ID[{}]剩餘時數", employeeCode, currentYear, leaveTypeId);
+
+        Employee employee = employeeService.findEmployeeByCode(employeeCode);
+
+        return employeeLeaveBalanceRepository.findByEmployeeEmployeeIdAndLeaveTypeLeaveTypeIdAndLeaveYear(
+            employee.getEmployeeId(), leaveTypeId, currentYear
+            ).map(EmployeeLeaveBalance::getRemainingHours)
+            .orElseThrow(() -> new IllegalArgumentException("查無該假別ID的剩餘時數紀錄"));
+    }
+
 
     private LeaveBalanceDTO convertToDTO(EmployeeLeaveBalance balance) {
         return new LeaveBalanceDTO(

@@ -3,6 +3,9 @@ package com.tsmc.cloudnative.attendancesystemapi.controller;
 import com.tsmc.cloudnative.attendancesystemapi.common.ApiResponse;
 import com.tsmc.cloudnative.attendancesystemapi.dto.LeaveBalanceDTO;
 import com.tsmc.cloudnative.attendancesystemapi.service.LeaveBalanceService;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
@@ -48,4 +51,23 @@ public class LeaveBalanceController {
 
         return ApiResponse.success("成功獲取請假餘額列表", balances);
     }
+
+    @Operation(summary = "查詢使用者當年度特定假別的剩餘時數")
+    @GetMapping("/type/{typeId}")
+    public ApiResponse<Integer> getRemainingHoursByLeaveType(
+            Authentication authentication,
+            @Parameter(
+                description = "假別類型 ID，例如：1=特休假, 2=病假, 3=事假",
+                example = "1"
+            )
+            @PathVariable Integer typeId) {
+
+        String employeeCode = authentication.getName();
+        log.info("用戶[{}]查詢其當年度假別ID[{}]的剩餘時數", employeeCode, typeId);
+
+        Integer remainingHours = leaveBalanceService.getRemainingHoursByTypeId(employeeCode, typeId);
+
+        return ApiResponse.success("成功取得剩餘時數", remainingHours);
+    }
+
 }
