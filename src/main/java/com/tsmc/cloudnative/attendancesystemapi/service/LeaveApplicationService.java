@@ -248,4 +248,29 @@ public class LeaveApplicationService {
 
     }
 
+    public LeaveApplicationResponseDTO approveLeaveApplication(Integer leaveId, String approvalReason) {
+        return updateLeaveApplicationStatus(leaveId, "已核准", approvalReason);
+    }
+
+    public LeaveApplicationResponseDTO rejectLeaveApplication(Integer leaveId, String approvalReason) {
+        return updateLeaveApplicationStatus(leaveId, "已駁回", approvalReason);
+    }
+
+    private LeaveApplicationResponseDTO updateLeaveApplicationStatus(Integer leaveId, String status, String approvalReason) {
+        LeaveApplication leaveApplication = leaveApplicationRepository.findById(leaveId)
+                .orElseThrow(() -> {
+                    log.error("沒有找到請假申請：{} ", leaveId);
+                    return new IllegalArgumentException("沒有找到請假申請");
+                });
+
+        leaveApplication.setStatus(status);
+        leaveApplication.setApprovalReason(approvalReason);
+        leaveApplication.setApprovalDatetime(LocalDateTime.now());
+
+        LeaveApplication updatedLeaveApplication = leaveApplicationRepository.save(leaveApplication);
+        log.info("請假申請：{} 狀態已更新為 {}", leaveId, status);
+
+        return convertToResponseDTO(updatedLeaveApplication);
+    }
+
 }
