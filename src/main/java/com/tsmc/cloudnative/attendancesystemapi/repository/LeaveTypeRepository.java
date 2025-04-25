@@ -1,11 +1,12 @@
 package com.tsmc.cloudnative.attendancesystemapi.repository;
 
+import com.tsmc.cloudnative.attendancesystemapi.entity.LeaveType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import com.tsmc.cloudnative.attendancesystemapi.entity.LeaveType;
+import java.util.List;
+import java.util.Optional;
 
 @Repository
-public interface LeaveTypeRepository extends JpaRepository<LeaveType, Integer>{
-
+public interface LeaveTypeRepository extends JpaRepository<LeaveType, Integer> {
 }

@@ -5,6 +5,7 @@ import com.tsmc.cloudnative.attendancesystemapi.dto.LeaveApplicationCreateRespon
 import com.tsmc.cloudnative.attendancesystemapi.dto.LeaveApplicationListDTO;
 import com.tsmc.cloudnative.attendancesystemapi.dto.LeaveApplicationRequestDTO;
 import com.tsmc.cloudnative.attendancesystemapi.dto.LeaveApplicationResponseDTO;
+import com.tsmc.cloudnative.attendancesystemapi.dto.LeaveApplicationUpdateRequestDTO;
 import com.tsmc.cloudnative.attendancesystemapi.service.LeaveApplicationService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
@@ -50,6 +51,21 @@ public class LeaveApplicationController {
         return ApiResponse.success("成功獲取請假記錄詳情", application);
     }
 
+    @PutMapping("/{id}")
+    @Operation(summary = "修改個人單筆未審核請假紀錄")
+    public ApiResponse<LeaveApplicationResponseDTO> updateEmployeeLeaveApplication(
+            Authentication authentication,
+            @PathVariable("id") Integer applicationId,
+            @RequestBody LeaveApplicationUpdateRequestDTO updateRequest) {
+
+        String employeeCode = authentication.getName();
+        log.info("用戶[{}]欲修改其請假記錄[{}]", employeeCode, applicationId);
+
+        LeaveApplicationResponseDTO updated = leaveApplicationService
+                .updateEmployeeLeaveApplication(employeeCode, applicationId, updateRequest);
+
+        return ApiResponse.success("成功修改請假記錄", updated);
+  
     @PostMapping("/apply")
     @Operation(summary = "送出請假申請")
     public ApiResponse<LeaveApplicationCreateResponseDTO> applyLeave(

@@ -4,6 +4,7 @@ import com.tsmc.cloudnative.attendancesystemapi.dto.LeaveApplicationCreateRespon
 import com.tsmc.cloudnative.attendancesystemapi.dto.LeaveApplicationListDTO;
 import com.tsmc.cloudnative.attendancesystemapi.dto.LeaveApplicationRequestDTO;
 import com.tsmc.cloudnative.attendancesystemapi.dto.LeaveApplicationResponseDTO;
+import com.tsmc.cloudnative.attendancesystemapi.dto.LeaveApplicationUpdateRequestDTO;
 import com.tsmc.cloudnative.attendancesystemapi.entity.Employee;
 import com.tsmc.cloudnative.attendancesystemapi.entity.EmployeeLeaveBalance;
 import com.tsmc.cloudnative.attendancesystemapi.entity.LeaveApplication;
@@ -29,6 +30,7 @@ public class LeaveApplicationService {
     private final LeaveTypeRepository leaveTypeRepository;
     private final EmployeeLeaveBalanceRepository employeeLeaveBalanceRepository;
     private final EmployeeService employeeService;
+    private final LeaveTypeRepository leaveTypeRepository;
 
     public List<LeaveApplicationListDTO> getEmployeeLeaveApplications(String employeeCode) {
         log.debug("開始查詢員工[{}]的所有請假記錄", employeeCode);
@@ -94,6 +96,54 @@ public class LeaveApplicationService {
         log.debug("成功查詢到主管[{}]底下的請假記錄[{}]", managerCode, applicationId);
 
         // 轉換為DTO
+        return convertToResponseDTO(application);
+    }
+
+    public LeaveApplicationResponseDTO updateEmployeeLeaveApplication(
+            String employeeCode, Integer applicationId, LeaveApplicationUpdateRequestDTO updateDTO) {
+
+        log.debug("員工[{}]請求更新請假紀錄[{}]", employeeCode, applicationId);
+
+        // 驗證員工身分
+        Employee employee = employeeService.findEmployeeByCode(employeeCode);
+
+        // 查詢請假紀錄是否存在並屬於該員工
+        LeaveApplication application = leaveApplicationRepository
+                .findByApplicationIdAndEmployeeEmployeeId(applicationId, employee.getEmployeeId())
+                .orElseThrow(() -> new RuntimeException("請假記錄不存在或無權限修改"));
+
+        // 僅允許修改尚未審核的紀錄
+        if (!"待審核".equalsIgnoreCase(application.getStatus())) {
+            throw new IllegalStateException("該筆請假記錄已被審核，無法修改");
+        }
+
+        // 透過 leaveTypeRepository 抓 Entity
+        LeaveType leaveType = leaveTypeRepository.findById(updateDTO.getLeaveTypeId())
+                .orElseThrow(() -> new RuntimeException("無效的請假類型"));
+
+        application.setLeaveType(leaveType);
+
+        // 更新欄位
+        // application.setLeaveType(new LeaveType(updateDTO.getLeaveTypeId())); // 可根據實際情況查資料或簡單包 ID
+        application.setStartDatetime(updateDTO.getStartDateTime());
+        application.setEndDatetime(updateDTO.getEndDateTime());
+        application.setLeaveHours(updateDTO.getLeaveHours());
+        application.setReason(updateDTO.getReason());
+
+        if (updateDTO.getProxyEmployeeId() != null) {
+            Employee proxy = new Employee();
+            proxy.setEmployeeId(updateDTO.getProxyEmployeeId());
+            application.setProxyEmployee(proxy);
+        }
+
+        application.setFilePath(updateDTO.getFilePath());
+        application.setFileName(updateDTO.getFileName());
+
+        // 儲存更新後的資料
+        leaveApplicationRepository.save(application);
+
+        log.debug("員工[{}]的請假記錄[{}]更新成功", employeeCode, applicationId);
+
         return convertToResponseDTO(application);
     }
 
