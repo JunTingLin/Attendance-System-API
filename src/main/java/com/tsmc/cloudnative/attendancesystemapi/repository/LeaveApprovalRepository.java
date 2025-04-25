@@ -10,8 +10,4 @@ import com.tsmc.cloudnative.attendancesystemapi.entity.LeaveApplication;
 @Repository
 public interface LeaveApprovalRepository extends JpaRepository<LeaveApplication, Integer> {
 
-    @Transactional
-    @Modifying
-    @Query("UPDATE LeaveApplication la SET la.status = ?2, la.approvalReason = ?3 WHERE la.id = ?1")
-    void updateStatusAndApprovalReasonById(Integer leaveId, String status, String approvalReason);
 }
