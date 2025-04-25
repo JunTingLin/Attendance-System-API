@@ -2,7 +2,10 @@ package com.tsmc.cloudnative.attendancesystemapi.repository;
 
 import com.tsmc.cloudnative.attendancesystemapi.entity.LeaveApplication;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -23,4 +26,10 @@ public interface LeaveApplicationRepository extends JpaRepository<LeaveApplicati
 
     // 查詢特定主管下屬的特定請假記錄
     Optional<LeaveApplication> findByApplicationIdAndEmployeeSupervisorEmployeeId(Integer applicationId, Integer supervisorId);
+
+    // 審核價單
+    @Transactional
+    @Modifying
+    @Query("UPDATE LeaveApplication la SET la.status = ?2, la.approvalReason = ?3 WHERE la.id = ?1")
+    void updateStatusAndApprovalReasonById(Integer leaveId, String status, String approvalReason);
 }
