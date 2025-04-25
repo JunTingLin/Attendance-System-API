@@ -65,6 +65,7 @@ public class LeaveApplicationController {
                 .updateEmployeeLeaveApplication(employeeCode, applicationId, updateRequest);
 
         return ApiResponse.success("成功修改請假記錄", updated);
+    }
   
     @PostMapping("/apply")
     @Operation(summary = "送出請假申請")

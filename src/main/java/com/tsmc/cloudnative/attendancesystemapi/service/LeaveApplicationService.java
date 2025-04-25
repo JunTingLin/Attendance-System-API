@@ -30,7 +30,6 @@ public class LeaveApplicationService {
     private final LeaveTypeRepository leaveTypeRepository;
     private final EmployeeLeaveBalanceRepository employeeLeaveBalanceRepository;
     private final EmployeeService employeeService;
-    private final LeaveTypeRepository leaveTypeRepository;
 
     public List<LeaveApplicationListDTO> getEmployeeLeaveApplications(String employeeCode) {
         log.debug("開始查詢員工[{}]的所有請假記錄", employeeCode);
