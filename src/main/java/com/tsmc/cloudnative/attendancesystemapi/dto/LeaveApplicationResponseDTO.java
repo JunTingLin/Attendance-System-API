@@ -25,7 +25,7 @@ public class LeaveApplicationResponseDTO {
     private LocalDateTime applicationDateTime;
     private Integer approverEmployeeId;
     private String approverEmployeeName;
-    private String aprrovalReason;
+    private String approvalReason;
     private String filePath;
     private String fileName;
 }
