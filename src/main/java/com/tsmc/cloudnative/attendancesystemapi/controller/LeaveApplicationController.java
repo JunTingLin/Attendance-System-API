@@ -4,7 +4,6 @@ import com.tsmc.cloudnative.attendancesystemapi.common.ApiResponse;
 import com.tsmc.cloudnative.attendancesystemapi.dto.LeaveApplicationListDTO;
 import com.tsmc.cloudnative.attendancesystemapi.dto.LeaveApplicationRequestDTO;
 import com.tsmc.cloudnative.attendancesystemapi.dto.LeaveApplicationResponseDTO;
-import com.tsmc.cloudnative.attendancesystemapi.dto.LeaveApplicationUpdateRequestDTO;
 import com.tsmc.cloudnative.attendancesystemapi.service.LeaveApplicationService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
@@ -55,7 +54,7 @@ public class LeaveApplicationController {
     public ApiResponse<LeaveApplicationResponseDTO> updateEmployeeLeaveApplication(
             Authentication authentication,
             @PathVariable("id") Integer applicationId,
-            @RequestBody LeaveApplicationUpdateRequestDTO updateRequest) {
+            @RequestBody LeaveApplicationRequestDTO updateRequest) {
 
         String employeeCode = authentication.getName();
         log.info("用戶[{}]欲修改其請假記錄[{}]", employeeCode, applicationId);

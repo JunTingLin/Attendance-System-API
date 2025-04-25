@@ -1,23 +1,25 @@
 package com.tsmc.cloudnative.attendancesystemapi.dto;
 
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import java.time.LocalDateTime;
 
 @Data
+@AllArgsConstructor
 public class LeaveApplicationRequestDTO {
 
-    @NotNull
+    @NotNull(message = "請假類型不能為空")
     private Integer leaveTypeId;
 
-    @NotNull
+    @NotNull(message = "開始時間不能為空")
     private LocalDateTime startDateTime;
 
-    @NotNull
-    private LocalDateTime endDatetime;
+    @NotNull(message = "結束時間不能為空")
+    private LocalDateTime endDateTime;
 
-    @NotNull
+    @NotNull(message = "請假時數不能為空")
     private Integer leaveHours;
 
     private String reason;

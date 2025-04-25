@@ -3,7 +3,6 @@ package com.tsmc.cloudnative.attendancesystemapi.service;
 import com.tsmc.cloudnative.attendancesystemapi.dto.LeaveApplicationListDTO;
 import com.tsmc.cloudnative.attendancesystemapi.dto.LeaveApplicationRequestDTO;
 import com.tsmc.cloudnative.attendancesystemapi.dto.LeaveApplicationResponseDTO;
-import com.tsmc.cloudnative.attendancesystemapi.dto.LeaveApplicationUpdateRequestDTO;
 import com.tsmc.cloudnative.attendancesystemapi.entity.Employee;
 import com.tsmc.cloudnative.attendancesystemapi.entity.EmployeeLeaveBalance;
 import com.tsmc.cloudnative.attendancesystemapi.entity.LeaveApplication;
@@ -100,7 +99,7 @@ public class LeaveApplicationService {
     }
 
     public LeaveApplicationResponseDTO updateEmployeeLeaveApplication(
-            String employeeCode, Integer applicationId, LeaveApplicationUpdateRequestDTO updateDTO) {
+            String employeeCode, Integer applicationId, LeaveApplicationRequestDTO updateDTO) {
 
         log.debug("員工[{}]請求更新請假紀錄[{}]", employeeCode, applicationId);
 
@@ -130,9 +129,8 @@ public class LeaveApplicationService {
         application.setLeaveHours(updateDTO.getLeaveHours());
         application.setReason(updateDTO.getReason());
 
-        if (updateDTO.getProxyEmployeeId() != null) {
-            Employee proxy = employeeRepository.findById(updateDTO.getProxyEmployeeId())
-                    .orElseThrow(() -> new RuntimeException("無效的代理員工 ID"));
+        if (updateDTO.getProxyEmployeeCode() != null && !updateDTO.getProxyEmployeeCode().isBlank()) {
+            Employee proxy = employeeService.findEmployeeByCode(updateDTO.getProxyEmployeeCode());
             application.setProxyEmployee(proxy);
         }
 
@@ -216,7 +214,7 @@ public class LeaveApplicationService {
             .orElseThrow(() -> new IllegalArgumentException("查無該假別的請假餘額"));
 
         // 驗證開始時間需早於結束時間
-        if (!requestDTO.getStartDateTime().isBefore(requestDTO.getEndDatetime())) {
+        if (!requestDTO.getStartDateTime().isBefore(requestDTO.getEndDateTime())) {
             throw new IllegalArgumentException("開始時間需早於結束時間");
         }
 
@@ -230,7 +228,7 @@ public class LeaveApplicationService {
         application.setEmployee(employee);
         application.setLeaveType(leaveType);
         application.setStartDatetime(requestDTO.getStartDateTime());
-        application.setEndDatetime(requestDTO.getEndDatetime());
+        application.setEndDatetime(requestDTO.getEndDateTime());
         application.setLeaveHours(requestDTO.getLeaveHours());
         application.setReason(requestDTO.getReason());
 
