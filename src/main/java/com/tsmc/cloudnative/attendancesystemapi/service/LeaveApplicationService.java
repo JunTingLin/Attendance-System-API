@@ -1,6 +1,5 @@
 package com.tsmc.cloudnative.attendancesystemapi.service;
 
-import com.tsmc.cloudnative.attendancesystemapi.dto.LeaveApplicationCreateResponseDTO;
 import com.tsmc.cloudnative.attendancesystemapi.dto.LeaveApplicationListDTO;
 import com.tsmc.cloudnative.attendancesystemapi.dto.LeaveApplicationRequestDTO;
 import com.tsmc.cloudnative.attendancesystemapi.dto.LeaveApplicationResponseDTO;
@@ -9,6 +8,7 @@ import com.tsmc.cloudnative.attendancesystemapi.entity.Employee;
 import com.tsmc.cloudnative.attendancesystemapi.entity.EmployeeLeaveBalance;
 import com.tsmc.cloudnative.attendancesystemapi.entity.LeaveApplication;
 import com.tsmc.cloudnative.attendancesystemapi.entity.LeaveType;
+import com.tsmc.cloudnative.attendancesystemapi.repository.EmployeeRepository;
 import com.tsmc.cloudnative.attendancesystemapi.repository.LeaveApplicationRepository;
 import com.tsmc.cloudnative.attendancesystemapi.repository.LeaveTypeRepository;
 import com.tsmc.cloudnative.attendancesystemapi.repository.EmployeeLeaveBalanceRepository;
@@ -30,6 +30,7 @@ public class LeaveApplicationService {
     private final LeaveTypeRepository leaveTypeRepository;
     private final EmployeeLeaveBalanceRepository employeeLeaveBalanceRepository;
     private final EmployeeService employeeService;
+    private final EmployeeRepository employeeRepository;
 
     public List<LeaveApplicationListDTO> getEmployeeLeaveApplications(String employeeCode) {
         log.debug("開始查詢員工[{}]的所有請假記錄", employeeCode);
@@ -130,8 +131,8 @@ public class LeaveApplicationService {
         application.setReason(updateDTO.getReason());
 
         if (updateDTO.getProxyEmployeeId() != null) {
-            Employee proxy = new Employee();
-            proxy.setEmployeeId(updateDTO.getProxyEmployeeId());
+            Employee proxy = employeeRepository.findById(updateDTO.getProxyEmployeeId())
+                    .orElseThrow(() -> new RuntimeException("無效的代理員工 ID"));
             application.setProxyEmployee(proxy);
         }
 
@@ -189,7 +190,7 @@ public class LeaveApplicationService {
     }
 
 
-    public LeaveApplicationCreateResponseDTO applyLeave(String employeeCode, LeaveApplicationRequestDTO requestDTO){
+    public LeaveApplicationResponseDTO  applyLeave(String employeeCode, LeaveApplicationRequestDTO requestDTO){
 
         Employee employee = employeeService.findEmployeeByCode(employeeCode);
 
@@ -245,11 +246,7 @@ public class LeaveApplicationService {
         }
 
         LeaveApplication saved = leaveApplicationRepository.save(application);
-        return new LeaveApplicationCreateResponseDTO(
-            saved.getApplicationId(),
-            saved.getStatus(),
-            saved.getApplicationDatetime()
-        );
+        return convertToResponseDTO(saved);
 
     }
 

@@ -1,7 +1,6 @@
 package com.tsmc.cloudnative.attendancesystemapi.controller;
 
 import com.tsmc.cloudnative.attendancesystemapi.common.ApiResponse;
-import com.tsmc.cloudnative.attendancesystemapi.dto.LeaveApplicationCreateResponseDTO;
 import com.tsmc.cloudnative.attendancesystemapi.dto.LeaveApplicationListDTO;
 import com.tsmc.cloudnative.attendancesystemapi.dto.LeaveApplicationRequestDTO;
 import com.tsmc.cloudnative.attendancesystemapi.dto.LeaveApplicationResponseDTO;
@@ -69,14 +68,14 @@ public class LeaveApplicationController {
   
     @PostMapping("/apply")
     @Operation(summary = "送出請假申請")
-    public ApiResponse<LeaveApplicationCreateResponseDTO> applyLeave(
+    public ApiResponse<LeaveApplicationResponseDTO> applyLeave(
             Authentication authentication,
             @RequestBody @Valid LeaveApplicationRequestDTO requestDTO) {
 
         String employeeCode = authentication.getName();
         log.info("使用者[{}]發起請假申請，假別ID:{}", employeeCode, requestDTO.getLeaveTypeId());
 
-        LeaveApplicationCreateResponseDTO response = leaveApplicationService.applyLeave(employeeCode, requestDTO);
+        LeaveApplicationResponseDTO  response = leaveApplicationService.applyLeave(employeeCode, requestDTO);
 
         return ApiResponse.success("請假申請成功", response);
     }
