@@ -29,7 +29,7 @@ public class LeaveApplicationService {
     private final LeaveTypeRepository leaveTypeRepository;
     private final EmployeeLeaveBalanceRepository employeeLeaveBalanceRepository;
     private final EmployeeService employeeService;
-    private final EmployeeRepository employeeRepository;
+    private final NotificationService notificationService;
 
     public List<LeaveApplicationListDTO> getEmployeeLeaveApplications(String employeeCode) {
         log.debug("開始查詢員工[{}]的所有請假記錄", employeeCode);
@@ -251,11 +251,29 @@ public class LeaveApplicationService {
     }
 
     public LeaveApplicationResponseDTO approveLeaveApplication(Integer leaveId, String approvalReason) {
-        return updateLeaveApplicationStatus(leaveId, "已核准", approvalReason);
+        LeaveApplicationResponseDTO responseDTO = updateLeaveApplicationStatus(leaveId, "已核准", approvalReason);
+        // 自動發送通知
+        try {
+            notificationService.notifyLeaveStatus(leaveId);
+            log.info("請假核准通知已發送，ID: {}", leaveId);
+        } catch (Exception e) {
+            log.warn("請假核准通知發送失敗，ID: {}，原因: {}", leaveId, e.getMessage());
+            // 不影響核准流程，所以只記錄不拋出
+        }
+        return responseDTO;
     }
 
     public LeaveApplicationResponseDTO rejectLeaveApplication(Integer leaveId, String approvalReason) {
-        return updateLeaveApplicationStatus(leaveId, "已駁回", approvalReason);
+        LeaveApplicationResponseDTO responseDTO = updateLeaveApplicationStatus(leaveId, "已駁回", approvalReason);
+        // 自動發送通知
+        try {
+            notificationService.notifyLeaveStatus(leaveId);
+            log.info("請假駁回通知已發送，ID: {}", leaveId);
+        } catch (Exception e) {
+            log.warn("請假駁回通知發送失敗，ID: {}，原因: {}", leaveId, e.getMessage());
+            // 不影響駁回流程，所以只記錄不拋出
+        }
+        return responseDTO;
     }
 
     private LeaveApplicationResponseDTO updateLeaveApplicationStatus(Integer leaveId, String status, String approvalReason) {
