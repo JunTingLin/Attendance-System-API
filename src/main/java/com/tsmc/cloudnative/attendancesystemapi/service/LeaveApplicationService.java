@@ -238,7 +238,9 @@ public class LeaveApplicationService {
         application.setFileName(requestDTO.getFileName());
 
         // 取得代理人
-        if (requestDTO.getProxyEmployeeCode() != null && !requestDTO.getProxyEmployeeCode().isBlank()){
+        if (requestDTO.getProxyEmployeeCode() == null || requestDTO.getProxyEmployeeCode().isBlank()) {
+            throw new IllegalArgumentException("請填寫代理人");
+        } else {
             Employee proxy = employeeService.findEmployeeByCode(requestDTO.getProxyEmployeeCode());
             application.setProxyEmployee(proxy);
         }
