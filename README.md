@@ -16,28 +16,101 @@
 
 請先至上述 repo 根據說明啟動資料庫環境後，再於本專案設定的資料庫連線設定：
 
- 📌 編輯檔案 [application.properties](src/main/resources/application.properties)：
-
-```properties
-spring.datasource.url=jdbc:mysql://127.0.0.1:3307/Attendance_System?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Taipei
-spring.datasource.username=user
-spring.datasource.password=user123
-```
-
 ---
 
-## 🛠️ 專案啟動步驟
+## 🛠️ 開發環境 (Dev)
 
-1. **從原始碼編譯並啟動：**
+### 方法一：IDE 執行 (後端開發者)
+1. 將 `dev.env` 檔案匯入 IntelliJ IDEA 的 Run/Debug Configuration → Environment variables
 
-```bash
-mvn clean install
-mvn spring-boot:run
+>   📌 設定方式可參考 [Discussion #9](https://github.com/JunTingLin/Attendance-System-API/discussions/9) 的錄製影片
+
+2. `dev.env`：
+```
+# dev
+SPRING_PROFILES_ACTIVE=dev
+
+DB_HOST=127.0.0.1
+DB_PORT=3307
+DB_NAME=Attendance_System
+DB_USER=user
+DB_PASS=user123
+
+JWT_SECRET=TRfOM+M50a6zz78EzdabF3+nQfBvI7xjZE4Xx3ERFUy40/jQYG2IfKz93hiPKmSyfaaOoUbhBEB1pz7yuYby7A==
+
+UPLOAD_DIR=C:/Users/junting/Desktop/Attendance-System-upload
+
+SERVER_PORT=8080
+
+TELEGRAM_BOT_TOKEN=temp_placeholder_token_1234567890
 ```
 
-2. **透過 IDE 執行**：
+3. 啟動應用：
+直接啟動主程式入口[AttendanceSystemApiApplication](src/main/java/com/tsmc/cloudnative/attendancesystemapi/AttendanceSystemApiApplication.java)
 
-如使用 Intellij IDEA 或 Eclipse，直接啟動主程式入口[AttendanceSystemApiApplication](src/main/java/com/tsmc/cloudnative/attendancesystemapi/AttendanceSystemApiApplication.java)
+### 方法二：Docker 執行 (推薦)
+1. 建置映像：
+```
+docker build -t attendance-app:local .
+```
+
+2. 使用 `dev.env` 參數檔啟動容器：
+```
+docker run \
+  --rm \
+  -e SPRING_PROFILES_ACTIVE="dev" \
+  -e SERVER_PORT="8080" \
+  -e SPRING_CLOUD_GCP_SQL_ENABLED=false \
+  -e DB_HOST="host.docker.internal" \
+  -e DB_PORT="3307" \
+  -e DB_NAME="Attendance_System" \
+  -e DB_USER="root" \
+  -e DB_PASS="root123" \
+  -e JWT_SECRET="TRfOM+M50a6zz78EzdabF3+nQfBvI7xjZE4Xx3ERFUy40/jQYG2IfKz93hiPKmSyfaaOoUbhBEB1pz7yuYby7A==" \
+  -e TELEGRAM_BOT_TOKEN="YOUR_TELEGRAM_BOT_TOKEN" \
+  -e UPLOAD_DIR="/app/upload" \
+  -v "C:/Users/junting/Desktop/Attendance-System-upload:/app/upload" \
+  -p 8080:8080 \
+  attendance-app:local
+```
+💡 補充：
+1. 以下 `\` 為 bash 的續行符號，Windows 使用者請使用 Git Bash 或 WSL 執行，或改寫成單行命令。
+2. `--rm` 表示容器在結束後自動移除，可視需求選擇是否保留。
+3. 請將 `YOUR_TELEGRAM_BOT_TOKEN` 替換為實際的 `TELEGRAM_BOT_TOKEN` 值。
+4. 檔案上傳路徑`UPLOAD_DIR`，請搭配 -v 掛載對應目錄
+   +  容器內部可設定為 `/app/upload`
+   + 本機目錄依使用者作業系統而異
++ Windows 範例：
+```
+-e UPLOAD_DIR="/app/upload" \
+-v "C:/Users/你的名稱/Desktop/Attendance-System-upload:/app/upload" \
+```
++ macOS/Linux 範例：
+```
+-e UPLOAD_DIR="/app/upload" \
+-v "$HOME/Attendance-System-upload:/app/upload" \
+```
+## 🌐 正式環境 (GCP Cloud Storage + Cloud Run + Cloud SQL)
+環境變數：
+```
+# Prod
+SPRING_PROFILES_ACTIVE=prod
+
+CLOUD_SQL_INSTANCE=tsmc-attendance-system:asia-east1:attendace-system-mysql
+DB_NAME=Attendance_System
+DB_USER=YOUR_DB_USER
+DB_PASS=YOUR_DB_PASS
+
+JWT_SECRET=YOUR_JWT_SECRET
+
+GCS_BUCKET_NAME=attendance-system-files
+
+SERVER_PORT=8080
+
+TELEGRAM_BOT_TOKEN=YOUR_TELEGRAM_BOT_TOKEN
+
+```
+正式環境的具體部署細節將於未來說明。
 
 ---
 
