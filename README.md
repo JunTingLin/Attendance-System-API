@@ -56,9 +56,9 @@ TELEGRAM_BOT_TOKEN=temp_placeholder_token_1234567890
 直接啟動主程式入口[AttendanceSystemApiApplication](src/main/java/com/tsmc/cloudnative/attendancesystemapi/AttendanceSystemApiApplication.java)
 
 ### 方法二：Docker 執行 (推薦)
-1. 建置映像：
+1. 從 Docker Hub 拉取映像：
 ```
-docker build -t attendance-app:local .
+docker pull juntinglin/attendance-app:latest
 ```
 
 2. 使用 `dev.env` 參數檔啟動容器：
@@ -78,7 +78,7 @@ docker run \
   -e UPLOAD_DIR="/app/upload" \
   -v "C:/Users/junting/Desktop/Attendance-System-upload:/app/upload" \
   -p 8080:8080 \
-  attendance-app:local
+  juntinglin/attendance-app:latest
 ```
 💡 補充：
 1. 以下 `\` 為 bash 的續行符號，Windows 使用者請使用 Git Bash 或 WSL 執行，或改寫成單行命令。
