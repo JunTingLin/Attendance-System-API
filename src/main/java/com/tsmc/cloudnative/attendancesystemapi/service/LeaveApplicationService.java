@@ -154,7 +154,14 @@ public class LeaveApplicationService {
                 application.getEndDatetime(),
                 application.getLeaveHours(),
                 application.getStatus(),
-                application.getApplicationDatetime()
+                application.getApplicationDatetime(),
+                application.getReason(),
+                application.getApprovalReason(),
+                application.getProxyEmployee().getEmployeeCode(),
+                application.getProxyEmployee().getEmployeeName(),
+                application.getApprovalDatetime(),
+                application.getFilePath(),
+                application.getFileName()
         );
     }
 
