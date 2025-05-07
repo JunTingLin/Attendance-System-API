@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
@@ -23,9 +24,9 @@ import java.util.Set;
 import java.util.UUID;
 
 @Service
-@Profile("prod")
 @Slf4j
 @RequiredArgsConstructor
+@ConditionalOnProperty(name = "gcs.bucket-name")
 public class GcsFileStorage implements FileStorage{
 
     @Value("${gcs.bucket-name}")
