@@ -1,14 +1,18 @@
 package com.tsmc.cloudnative.attendancesystemapi.dto;
 
 import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDateTime;
 
+import org.checkerframework.checker.units.qual.N;
+
 @Slf4j
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
 public class LeaveApplicationResponseDTO {
     private Integer leaveApplicationId;
     private Integer employeeId;
