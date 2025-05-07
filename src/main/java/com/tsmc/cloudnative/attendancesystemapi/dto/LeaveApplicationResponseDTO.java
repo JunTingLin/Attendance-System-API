@@ -19,7 +19,7 @@ public class LeaveApplicationResponseDTO {
     private LocalDateTime endDateTime;
     private Integer leaveHours;
     private String reason;
-    private Integer proxyEmployeeId;
+    private String proxyEmployeeCode;
     private String proxyEmployeeName;
     private String status;
     private LocalDateTime applicationDateTime;
