@@ -120,7 +120,47 @@ TELEGRAM_BOT_TOKEN=YOUR_TELEGRAM_BOT_TOKEN
 正式環境的具體部署細節將於未來說明。
 
 ---
+##  測試
+本專案採用多層次測試，依需求選擇適合的測試範圍：
 
+### 1. 單元測試 (Unit Tests)
++ 目的：測試單一類別或方法的邏輯，完全不啟動 Spring Context；所有外部依賴以 Mockito Stub。
++ 範例：
+  +  `EmployeeServiceTest.java`
+  + `LeaveApplicationServiceTest.java`
+  + `LeaveApplicationControllerTest.java`
+
+### 2. Repository Slice 測試 (@DataJpaTest)
++ 目的：啟動 Spring Data JPA slice，使用 H2 in-memory database 測試 Repository CRUD 與 自訂Query 方法。
++ 配置：
+```
+@SpringBootTest
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
+@ActiveProfiles("test")
+```
++ 範例:
+`EmployeeRepositoryTest.java`
+
+### 整合測試 (Integration / Smoke Test)
++ 目的：啟動完整 Spring Boot AppContext，包含 Security、Controller、Service、Repository，確保應用能正常啟動與整體流程通暢。
++ 配置：
+```
+@SpringBootTest
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
+@ActiveProfiles("test")
+```
++ 範例:
+  `AttendanceSystemApiApplicationTests.java`
+ 
+#### 指令
+```
+mvn test -Dskip.integration
+```
+
+測試環境設定檔：[application-test.properties](src/test/resources/application-test.properties)
+
+
+---
 ## 🔗 API 文件與測試（Swagger）
 
 啟動專案後透過瀏覽器訪問 Swagger UI 即可進行 API 測試及查看：
