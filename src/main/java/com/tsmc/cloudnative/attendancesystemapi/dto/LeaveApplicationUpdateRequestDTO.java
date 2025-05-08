@@ -18,4 +18,5 @@ public class LeaveApplicationUpdateRequestDTO {
     private Integer proxyEmployeeId;
     private String filePath;
     private String fileName;
+    private String status;
 }
