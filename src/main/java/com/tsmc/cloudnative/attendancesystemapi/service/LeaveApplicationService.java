@@ -1,17 +1,22 @@
 package com.tsmc.cloudnative.attendancesystemapi.service;
 
 import com.tsmc.cloudnative.attendancesystemapi.dto.LeaveApplicationListDTO;
+import com.tsmc.cloudnative.attendancesystemapi.dto.LeaveApplicationRequestDTO;
 import com.tsmc.cloudnative.attendancesystemapi.dto.LeaveApplicationResponseDTO;
-import com.tsmc.cloudnative.attendancesystemapi.dto.LeaveApplicationUpdateRequestDTO;
 import com.tsmc.cloudnative.attendancesystemapi.entity.Employee;
+import com.tsmc.cloudnative.attendancesystemapi.entity.EmployeeLeaveBalance;
 import com.tsmc.cloudnative.attendancesystemapi.entity.LeaveApplication;
 import com.tsmc.cloudnative.attendancesystemapi.entity.LeaveType;
+import com.tsmc.cloudnative.attendancesystemapi.repository.EmployeeRepository;
 import com.tsmc.cloudnative.attendancesystemapi.repository.LeaveApplicationRepository;
 import com.tsmc.cloudnative.attendancesystemapi.repository.LeaveTypeRepository;
+import com.tsmc.cloudnative.attendancesystemapi.repository.EmployeeLeaveBalanceRepository;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -21,8 +26,10 @@ import java.util.stream.Collectors;
 public class LeaveApplicationService {
 
     private final LeaveApplicationRepository leaveApplicationRepository;
-    private final EmployeeService employeeService;
     private final LeaveTypeRepository leaveTypeRepository;
+    private final EmployeeLeaveBalanceRepository employeeLeaveBalanceRepository;
+    private final EmployeeService employeeService;
+    private final NotificationService notificationService;
 
     public List<LeaveApplicationListDTO> getEmployeeLeaveApplications(String employeeCode) {
         log.debug("開始查詢員工[{}]的所有請假記錄", employeeCode);
@@ -92,7 +99,7 @@ public class LeaveApplicationService {
     }
 
     public LeaveApplicationResponseDTO updateEmployeeLeaveApplication(
-            String employeeCode, Integer applicationId, LeaveApplicationUpdateRequestDTO updateDTO) {
+            String employeeCode, Integer applicationId, LeaveApplicationRequestDTO updateDTO) {
 
         log.debug("員工[{}]請求更新請假紀錄[{}]", employeeCode, applicationId);
 
@@ -122,9 +129,8 @@ public class LeaveApplicationService {
         application.setLeaveHours(updateDTO.getLeaveHours());
         application.setReason(updateDTO.getReason());
 
-        if (updateDTO.getProxyEmployeeId() != null) {
-            Employee proxy = new Employee();
-            proxy.setEmployeeId(updateDTO.getProxyEmployeeId());
+        if (updateDTO.getProxyEmployeeCode() != null && !updateDTO.getProxyEmployeeCode().isBlank()) {
+            Employee proxy = employeeService.findEmployeeByCode(updateDTO.getProxyEmployeeCode());
             application.setProxyEmployee(proxy);
         }
 
@@ -148,7 +154,14 @@ public class LeaveApplicationService {
                 application.getEndDatetime(),
                 application.getLeaveHours(),
                 application.getStatus(),
-                application.getApplicationDatetime()
+                application.getApplicationDatetime(),
+                application.getReason(),
+                application.getApprovalReason(),
+                application.getProxyEmployee().getEmployeeCode(),
+                application.getProxyEmployee().getEmployeeName(),
+                application.getApprovalDatetime(),
+                application.getFilePath(),
+                application.getFileName()
         );
     }
 
@@ -169,7 +182,7 @@ public class LeaveApplicationService {
                 application.getEndDatetime(),
                 application.getLeaveHours(),
                 application.getReason(),
-                application.getProxyEmployee().getEmployeeId(),
+                application.getProxyEmployee().getEmployeeCode(),
                 application.getProxyEmployee().getEmployeeName(),
                 application.getStatus(),
                 application.getApplicationDatetime(),
@@ -179,6 +192,112 @@ public class LeaveApplicationService {
                 fileUrl,
                 application.getFileName() != null ? application.getFileName() : null
         );
+    }
+
+
+    public LeaveApplicationResponseDTO  applyLeave(String employeeCode, LeaveApplicationRequestDTO requestDTO){
+
+        Employee employee = employeeService.findEmployeeByCode(employeeCode);
+
+
+        // 驗證假別合法
+        LeaveType leaveType = leaveTypeRepository.findById(requestDTO.getLeaveTypeId())
+            .orElseThrow(() -> new IllegalArgumentException("無效的假別ID"));
+
+        // 驗證是否需上傳附件
+        if (Boolean.TRUE.equals(leaveType.getAttachmentRequired()) ){
+            if (requestDTO.getFilePath() == null || requestDTO.getFilePath().isBlank()){
+                throw new IllegalArgumentException("此假別需上傳附件");
+            }
+        }
+
+        int currentYear = LocalDateTime.now().getYear();
+        EmployeeLeaveBalance balance = employeeLeaveBalanceRepository
+            .findByEmployeeEmployeeIdAndLeaveTypeLeaveTypeIdAndLeaveYear(
+                employee.getEmployeeId(),
+                requestDTO.getLeaveTypeId(),
+                currentYear
+            )
+            .orElseThrow(() -> new IllegalArgumentException("查無該假別的請假餘額"));
+
+        // 驗證開始時間需早於結束時間
+        if (!requestDTO.getStartDateTime().isBefore(requestDTO.getEndDateTime())) {
+            throw new IllegalArgumentException("開始時間需早於結束時間");
+        }
+
+        // 驗證請假時數是否超過餘額
+        if (requestDTO.getLeaveHours() > balance.getRemainingHours()) {
+            throw new IllegalArgumentException("請假時數超過可用餘額");
+        }
+
+
+        LeaveApplication application = new LeaveApplication();
+        application.setEmployee(employee);
+        application.setLeaveType(leaveType);
+        application.setStartDatetime(requestDTO.getStartDateTime());
+        application.setEndDatetime(requestDTO.getEndDateTime());
+        application.setLeaveHours(requestDTO.getLeaveHours());
+        application.setReason(requestDTO.getReason());
+
+        application.setApplicationDatetime((LocalDateTime.now()));
+        application.setStatus("待審核");
+        application.setFilePath(requestDTO.getFilePath());
+        application.setFileName(requestDTO.getFileName());
+
+        // 取得代理人
+        if (requestDTO.getProxyEmployeeCode() == null || requestDTO.getProxyEmployeeCode().isBlank()) {
+            throw new IllegalArgumentException("請填寫代理人");
+        } else {
+            Employee proxy = employeeService.findEmployeeByCode(requestDTO.getProxyEmployeeCode());
+            application.setProxyEmployee(proxy);
+        }
+
+        LeaveApplication saved = leaveApplicationRepository.save(application);
+        return convertToResponseDTO(saved);
+
+    }
+
+    public LeaveApplicationResponseDTO approveLeaveApplication(Integer leaveId, String approvalReason) {
+        LeaveApplicationResponseDTO responseDTO = updateLeaveApplicationStatus(leaveId, "已核准", approvalReason);
+        // 自動發送通知
+        try {
+            notificationService.notifyLeaveStatus(leaveId);
+            log.info("請假核准通知已發送，ID: {}", leaveId);
+        } catch (Exception e) {
+            log.warn("請假核准通知發送失敗，ID: {}，原因: {}", leaveId, e.getMessage());
+            // 不影響核准流程，所以只記錄不拋出
+        }
+        return responseDTO;
+    }
+
+    public LeaveApplicationResponseDTO rejectLeaveApplication(Integer leaveId, String approvalReason) {
+        LeaveApplicationResponseDTO responseDTO = updateLeaveApplicationStatus(leaveId, "已駁回", approvalReason);
+        // 自動發送通知
+        try {
+            notificationService.notifyLeaveStatus(leaveId);
+            log.info("請假駁回通知已發送，ID: {}", leaveId);
+        } catch (Exception e) {
+            log.warn("請假駁回通知發送失敗，ID: {}，原因: {}", leaveId, e.getMessage());
+            // 不影響駁回流程，所以只記錄不拋出
+        }
+        return responseDTO;
+    }
+
+    private LeaveApplicationResponseDTO updateLeaveApplicationStatus(Integer leaveId, String status, String approvalReason) {
+        LeaveApplication leaveApplication = leaveApplicationRepository.findById(leaveId)
+                .orElseThrow(() -> {
+                    log.error("沒有找到請假申請：{} ", leaveId);
+                    return new IllegalArgumentException("沒有找到請假申請");
+                });
+
+        leaveApplication.setStatus(status);
+        leaveApplication.setApprovalReason(approvalReason);
+        leaveApplication.setApprovalDatetime(LocalDateTime.now());
+
+        LeaveApplication updatedLeaveApplication = leaveApplicationRepository.save(leaveApplication);
+        log.info("請假申請：{} 狀態已更新為 {}", leaveId, status);
+
+        return convertToResponseDTO(updatedLeaveApplication);
     }
 
 }

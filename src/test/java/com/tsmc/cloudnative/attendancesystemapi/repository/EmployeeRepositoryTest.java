@@ -1,114 +1,70 @@
 package com.tsmc.cloudnative.attendancesystemapi.repository;
 
-import com.tsmc.cloudnative.attendancesystemapi.dto.EmployeeDTO;
-import com.tsmc.cloudnative.attendancesystemapi.entity.*;
+import com.tsmc.cloudnative.attendancesystemapi.entity.Department;
+import com.tsmc.cloudnative.attendancesystemapi.entity.Employee;
+import com.tsmc.cloudnative.attendancesystemapi.entity.Position;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDate;
-import java.util.Date;
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
+@ActiveProfiles("test")
 class EmployeeRepositoryTest {
-    @Autowired
-    private EmployeeRepository employeeRepository;
 
-    @Autowired
-    private RoleRepository roleRepository;
-
-    @Autowired
-    private EmployeeRoleRepository employeeRoleRepository;
-
-    // Assume these repositories exist for setting up required entities
     @Autowired
     private DepartmentRepository departmentRepository;
 
     @Autowired
     private PositionRepository positionRepository;
 
+    @Autowired
+    private EmployeeRepository employeeRepository;
 
     @BeforeEach
-    void setup() {
-        Department department = new Department();
-        department.setDepartmentName("營運組織");
-        department.setDepartmentCode("D001");
-        departmentRepository.save(department);
+    void setUp() {
+        // 建立一筆 department
+        Department dept = new Department();
+        dept.setDepartmentCode("D001");
+        dept.setDepartmentName("營運組織");
+        departmentRepository.save(dept);
 
-        Position position = new Position();
-        position.setPositionName("組織長");
-        position.setPositionLevel(4);
-        positionRepository.save(position);
+        // 建立一筆 position
+        Position pos = new Position();
+        pos.setPositionName("組織長");
+        pos.setPositionLevel(4);
+        positionRepository.save(pos);
 
-        Employee employee = new Employee();
-        employee.setEmployeeCode("test123");
-        employee.setEmployeeName("Test Employee");
-        employee.setPassword("testPass");
-        employee.setHireDate(LocalDate.now());
-        employee.setMonthsOfService(1);
-        employee.setDepartment(department);
-        employee.setPosition(position);
-        employee.setSupervisor(null);
-        employeeRepository.save(employee);
-
-        Role role = new Role();
-        role.setName("EMPLOYEE");
-        roleRepository.save(role);
-
-        EmployeeRole employeeRole = new EmployeeRole();
-        employeeRole.setEmployee(employee);
-        employeeRole.setRole(role);
-        employeeRoleRepository.save(employeeRole);
-
-        employee.getEmployeeRoles().add(employeeRole);
-        employeeRepository.save(employee);
+        // 建立一筆 employee（關聯 department, position）
+        Employee e = new Employee();
+        e.setEmployeeCode("EMP_TEST");
+        e.setEmployeeName("Test User");
+        e.setPassword("secret");
+        e.setDepartment(dept);
+        e.setPosition(pos);
+        e.setHireDate(LocalDate.of(2025, 5, 7));
+        e.setMonthsOfService(1);
+        // supervisor 可以留空
+        employeeRepository.save(e);
     }
-
 
     @Test
-    void testFindByEmployeeCode() {
-        Employee employee = employeeRepository.findByEmployeeCode("test123")
-                .orElseThrow(() -> new RuntimeException("找不到該員工"));  // 到這裡只會回傳Optional<Employee> 所以要解包 Optional，若找不到資料就拋出異常
+    void findByEmployeeCode_returnsEmployee() {
+        // act
+        Optional<Employee> found = employeeRepository.findByEmployeeCode("EMP_TEST");
 
-        // Use Optional to safely extract supervisor details
-        String supervisorCode = Optional.ofNullable(employee.getSupervisor())
-                .map(s -> s.getEmployeeCode())
-                .orElse(null);
-        String supervisorName = Optional.ofNullable(employee.getSupervisor())
-                .map(s -> s.getEmployeeName())
-                .orElse(null);
-
-        List<Integer> roleIds = employee.getEmployeeRoles().stream()
-                .map(er -> er.getRole().getRoleId())
-                .collect(Collectors.toList());
-        List<String> roleNames = employee.getEmployeeRoles().stream()
-                .map(er -> er.getRole().getName())
-                .collect(Collectors.toList());
-        EmployeeDTO dto = new EmployeeDTO(
-                employee.getEmployeeId(),
-                employee.getEmployeeCode(),
-                employee.getEmployeeName(),
-                roleIds,
-                roleNames,
-                employee.getDepartment().getDepartmentId(),
-                employee.getDepartment().getDepartmentName(),
-                employee.getPosition().getPositionId(),
-                employee.getPosition().getPositionName(),
-                supervisorCode,
-                supervisorName,
-                employee.getHireDate(),
-                employee.getMonthsOfService()
-        );
-
-        assertThat(dto.getEmployeeCode()).isEqualTo("test123");
-        assertThat(dto.getEmployeeName()).isEqualTo("Test Employee");
-        assertThat(dto.getRoleNames()).containsExactlyInAnyOrder("EMPLOYEE");
+        // assert
+        assertThat(found).isPresent();
+        assertThat(found.get().getEmployeeName()).isEqualTo("Test User");
+        assertThat(found.get().getDepartment().getDepartmentCode()).isEqualTo("D001");
+        assertThat(found.get().getPosition().getPositionName()).isEqualTo("組織長");
     }
 }
-

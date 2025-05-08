@@ -17,4 +17,11 @@ public class LeaveApplicationListDTO {
     private Integer leaveHours;
     private String status;
     private LocalDateTime applicationDateTime;
+    private String reason;
+    private String approvalReason;
+    private String proxyEmployeeCode;
+    private String proxyEmployeeName;
+    private LocalDateTime approvalDatetime;
+    private String filePath;
+    private String fileName;
 }
