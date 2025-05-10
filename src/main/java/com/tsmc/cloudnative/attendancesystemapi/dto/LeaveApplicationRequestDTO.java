@@ -32,4 +32,5 @@ public class LeaveApplicationRequestDTO {
 
     private String fileName;
 
+    private String status;
 }
