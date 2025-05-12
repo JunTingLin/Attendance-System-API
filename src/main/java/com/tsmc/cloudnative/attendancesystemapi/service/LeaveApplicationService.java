@@ -136,6 +136,7 @@ public class LeaveApplicationService {
 
         application.setFilePath(updateDTO.getFilePath());
         application.setFileName(updateDTO.getFileName());
+        application.setStatus(updateDTO.getStatus());
 
         // 儲存更新後的資料
         leaveApplicationRepository.save(application);
