@@ -59,7 +59,7 @@ public class ManagerLeaveControllerTest {
 
     @Test
     void rejectLeave_shouldReturnSuccessResponse() {
-        ReviewLeaveApplicationDTO request = createReviewRequest("缺乏佐證資料");
+        ReviewLeaveApplicationDTO request = createReviewRequest("表現不佳");
         LeaveApplicationResponseDTO responseDTO = createMockResponse("已駁回");
 
         when(leaveApplicationService.rejectLeaveApplication(leaveId, request.getApprovalReason()))

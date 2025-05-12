@@ -9,8 +9,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
@@ -37,11 +39,15 @@ class LeaveApplicationServiceTest {
     @Mock
     private LeaveApplicationRepository leaveApplicationRepository;
 
+    @Mock
+    private NotificationService notificationService;
+
     private LeaveApplicationRequestDTO validRequest;
     private Employee employee;
     private LeaveType leaveType;
     private EmployeeLeaveBalance balance;
     private Employee proxy;
+    private LeaveApplication validLeaveApplication;
 
     @BeforeEach
     void setUp() {
@@ -67,6 +73,16 @@ class LeaveApplicationServiceTest {
 
         proxy = new Employee();
         proxy.setEmployeeId(200);
+
+        validLeaveApplication = new LeaveApplication();
+        validLeaveApplication.setApplicationId(123);
+        validLeaveApplication.setEmployee(employee);
+        validLeaveApplication.setLeaveType(leaveType);
+        validLeaveApplication.setStartDatetime(LocalDateTime.of(2025, 5, 10, 9, 0));
+        validLeaveApplication.setEndDatetime(LocalDateTime.of(2025, 5, 10, 17, 0));
+        validLeaveApplication.setLeaveHours(8);
+        validLeaveApplication.setReason("Personal");
+        validLeaveApplication.setProxyEmployee(proxy);
     }
 
     @Test
@@ -169,5 +185,83 @@ class LeaveApplicationServiceTest {
         Exception ex = assertThrows(IllegalArgumentException.class,
                 () -> leaveApplicationService.applyLeave("EMP001", validRequest));
         assertEquals("請填寫代理人", ex.getMessage());
+    }
+
+    private void setupReviewScenario(String status, boolean shouldNotificationSucceed) {
+        Integer leaveId = validLeaveApplication.getApplicationId();
+        String reason = validLeaveApplication.getReason();
+
+        when(leaveApplicationRepository.findById(leaveId)).thenReturn(Optional.of(validLeaveApplication));
+
+        validLeaveApplication.setStatus(status);
+        when(leaveApplicationRepository.save(any())).thenReturn(validLeaveApplication);
+
+        if (shouldNotificationSucceed) {
+            when(notificationService.notifyLeaveStatus(leaveId)).thenReturn("通知已發送");
+        } else {
+            when(notificationService.notifyLeaveStatus(leaveId)).thenThrow(new RuntimeException("通知發送失敗"));
+        }
+    }
+
+    private void assertReviewResultAndCapture(LeaveApplicationResponseDTO result, String expectedStatus) {
+        assertEquals(expectedStatus, result.getStatus());
+
+        ArgumentCaptor<LeaveApplication> captor = ArgumentCaptor.forClass(LeaveApplication.class);
+        verify(leaveApplicationRepository).save(captor.capture());
+
+        LeaveApplication captured = captor.getValue();
+        assertEquals(expectedStatus, captured.getStatus());
+        assertEquals(validLeaveApplication.getReason(), captured.getApprovalReason());
+
+        verify(notificationService).notifyLeaveStatus(validLeaveApplication.getApplicationId());
+    }
+
+
+    @Test
+    void approveLeaveApplication_shouldUpdateStatusAndSendNotification() {
+        setupReviewScenario("已核准", true);
+
+        LeaveApplicationResponseDTO result = leaveApplicationService.approveLeaveApplication(
+                validLeaveApplication.getApplicationId(),
+                validLeaveApplication.getReason()
+        );
+
+        assertReviewResultAndCapture(result, "已核准");
+    }
+
+    @Test
+    void approveLeaveApplication_shouldUpdateStatusAndFailToSendNotification() {
+        setupReviewScenario("已核准", false);
+
+        LeaveApplicationResponseDTO result = leaveApplicationService.approveLeaveApplication(
+                validLeaveApplication.getApplicationId(),
+                validLeaveApplication.getReason()
+        );
+
+        assertReviewResultAndCapture(result, "已核准");
+    }
+
+    @Test
+    void rejectLeaveApplication_shouldUpdateStatusAndSendNotification() {
+        setupReviewScenario("已駁回", true);
+
+        LeaveApplicationResponseDTO result = leaveApplicationService.rejectLeaveApplication(
+                validLeaveApplication.getApplicationId(),
+                validLeaveApplication.getReason()
+        );
+
+        assertReviewResultAndCapture(result, "已駁回");
+    }
+
+    @Test
+    void rejectLeaveApplication_shouldUpdateStatusAndFailToSendNotification() {
+        setupReviewScenario("已駁回", false);
+
+        LeaveApplicationResponseDTO result = leaveApplicationService.rejectLeaveApplication(
+                validLeaveApplication.getApplicationId(),
+                validLeaveApplication.getReason()
+        );
+
+        assertReviewResultAndCapture(result,"已駁回");
     }
 }
