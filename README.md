@@ -125,6 +125,7 @@ TELEGRAM_BOT_TOKEN=YOUR_TELEGRAM_BOT_TOKEN
 
 ### 1. 單元測試 (Unit Tests)
 + 目的：測試單一類別或方法的邏輯，完全不啟動 Spring Context；所有外部依賴以 Mockito Stub。
++ 涵蓋範圍：因為 Controller 的主要任務是接收請求並轉發至 Service 層，由 Service 層負責主要業務邏輯，因此目前主要針對 service 層進行測試， 
 + 範例：
   +  `EmployeeServiceTest.java`
   + `LeaveApplicationServiceTest.java`
@@ -151,6 +152,7 @@ TELEGRAM_BOT_TOKEN=YOUR_TELEGRAM_BOT_TOKEN
 ```
 + 範例:
   `AttendanceSystemApiApplicationTests.java`
+
  
 #### 指令
 ```
@@ -159,7 +161,17 @@ mvn test -Dskip.integration
 
 測試環境設定檔：[application-test.properties](src/test/resources/application-test.properties)
 
+## 查看測試覆蓋率（Code Coverage）
++ 使用 JaCoCo 工具產生測試覆蓋率報告。
 
++ 執行下列 Maven 指令即可重新產生報告：
+```
+mvn clean test jacoco:report
+```
++ 報告會產生在以下路徑，打開 HTML 查看：
+```
+target/site/jacoco/index.html
+```
 ---
 ## 🔗 API 文件與測試（Swagger）
 

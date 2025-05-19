@@ -4,6 +4,7 @@ import com.tsmc.cloudnative.attendancesystemapi.dto.EmployeeDTO;
 import com.tsmc.cloudnative.attendancesystemapi.entity.*;
 import com.tsmc.cloudnative.attendancesystemapi.repository.EmployeeRepository;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -18,6 +19,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
+@Tag("unit")
 public class EmployeeServiceTest {
 
     @Mock

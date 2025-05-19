@@ -21,4 +21,13 @@ jobs:
           distribution: "temurin"
 
       - name: Build and run tests
-        run: mvn clean verify
+        run: mvn clean ve
+
+      - name: Generate Jacoco report
+        run: mvn jacoco:report
+
+      - name: Upload Jacoco report
+        uses: actions/upload-artifact@v3
+        with:
+          name: jacoco-report
+          path: target/site/jacoco
