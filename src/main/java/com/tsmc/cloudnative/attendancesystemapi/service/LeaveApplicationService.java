@@ -116,6 +116,13 @@ public class LeaveApplicationService {
             throw new IllegalStateException("該筆請假記錄已被審核，無法修改");
         }
 
+        // 驗證是否需上傳附件
+        if (Boolean.TRUE.equals(leaveType.getAttachmentRequired()) ){
+            if (requestDTO.getFilePath() == null || requestDTO.getFilePath().isBlank()){
+                throw new IllegalArgumentException("此假別需上傳附件");
+            }
+        }
+
         // 透過 leaveTypeRepository 抓 Entity
         LeaveType leaveType = leaveTypeRepository.findById(updateDTO.getLeaveTypeId())
                 .orElseThrow(() -> new RuntimeException("無效的請假類型"));
