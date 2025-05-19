@@ -4,6 +4,7 @@ import com.tsmc.cloudnative.attendancesystemapi.common.ApiResponse;
 import com.tsmc.cloudnative.attendancesystemapi.dto.LeaveApplicationResponseDTO;
 import com.tsmc.cloudnative.attendancesystemapi.dto.ReviewLeaveApplicationDTO;
 import com.tsmc.cloudnative.attendancesystemapi.service.LeaveApplicationService;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -15,6 +16,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@Tag("unit")
 public class ManagerLeaveControllerTest {
 
     @InjectMocks

@@ -1,11 +1,13 @@
 package com.tsmc.cloudnative.attendancesystemapi.service;
 
+import com.tsmc.cloudnative.attendancesystemapi.dto.LeaveApplicationListDTO;
 import com.tsmc.cloudnative.attendancesystemapi.dto.LeaveApplicationRequestDTO;
 import com.tsmc.cloudnative.attendancesystemapi.dto.LeaveApplicationResponseDTO;
 import com.tsmc.cloudnative.attendancesystemapi.entity.*;
 import com.tsmc.cloudnative.attendancesystemapi.repository.*;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -16,7 +18,9 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
+import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -25,6 +29,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@Tag("unit")
 class LeaveApplicationServiceTest {
 
     @InjectMocks
@@ -86,6 +91,84 @@ class LeaveApplicationServiceTest {
     }
 
     @Test
+    void getEmployeeLeaveApplications_shouldReturnList() {
+        when(employeeService.findEmployeeByCode("EMP001")).thenReturn(employee);
+        when(leaveApplicationRepository.findByEmployeeEmployeeIdOrderByApplicationDatetimeDesc(employee.getEmployeeId()))
+                .thenReturn(Arrays.asList(validLeaveApplication));
+
+        List<LeaveApplicationListDTO> result = leaveApplicationService.getEmployeeLeaveApplications("EMP001");
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+    }
+
+    @Test
+    void getEmployeeLeaveApplicationDetail_shouldReturnDetail() {
+        when(employeeService.findEmployeeByCode("EMP001")).thenReturn(employee);
+        when(leaveApplicationRepository.findByApplicationIdAndEmployeeEmployeeId(
+                validLeaveApplication.getApplicationId(), employee.getEmployeeId()))
+                .thenReturn(Optional.of(validLeaveApplication));
+
+        LeaveApplicationResponseDTO response = leaveApplicationService.getEmployeeLeaveApplicationDetail("EMP001", validLeaveApplication.getApplicationId());
+
+        assertNotNull(response);
+        assertEquals(validLeaveApplication.getLeaveHours(), response.getLeaveHours());
+    }
+
+    @Test
+    void getEmployeeLeaveApplicationDetail_notFound_shouldThrow() {
+        when(employeeService.findEmployeeByCode("EMP001")).thenReturn(employee);
+        when(leaveApplicationRepository.findByApplicationIdAndEmployeeEmployeeId(
+                validLeaveApplication.getApplicationId(), employee.getEmployeeId()))
+                .thenReturn(Optional.empty());
+
+        Exception ex = assertThrows(RuntimeException.class, () -> {
+            leaveApplicationService.getEmployeeLeaveApplicationDetail("EMP001", validLeaveApplication.getApplicationId());
+        });
+
+        assertEquals("請假記錄不存在或無權限查看", ex.getMessage());
+    }
+
+    @Test
+    void getManagerSubordinatesLeaveApplications_shouldReturnList() {
+        when(employeeService.findEmployeeByCode("MGR001")).thenReturn(employee);
+        when(leaveApplicationRepository.findByEmployeeSupervisorEmployeeIdOrderByApplicationDatetimeDesc(employee.getEmployeeId()))
+                .thenReturn(Arrays.asList(validLeaveApplication));
+
+        List<LeaveApplicationListDTO> result = leaveApplicationService.getManagerSubordinatesLeaveApplications("MGR001");
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+    }
+
+    @Test
+    void getManagerLeaveApplicationDetail_shouldReturnDetail() {
+        when(employeeService.findEmployeeByCode("MGR001")).thenReturn(employee);
+        when(leaveApplicationRepository.findByApplicationIdAndEmployeeSupervisorEmployeeId(
+                validLeaveApplication.getApplicationId(), employee.getEmployeeId()))
+                .thenReturn(Optional.of(validLeaveApplication));
+
+        LeaveApplicationResponseDTO response = leaveApplicationService.getManagerLeaveApplicationDetail("MGR001", validLeaveApplication.getApplicationId());
+
+        assertNotNull(response);
+        assertEquals(validLeaveApplication.getLeaveHours(), response.getLeaveHours());
+    }
+
+    @Test
+    void getManagerLeaveApplicationDetail_notFound_shouldThrow() {
+        when(employeeService.findEmployeeByCode("MGR001")).thenReturn(employee);
+        when(leaveApplicationRepository.findByApplicationIdAndEmployeeSupervisorEmployeeId(
+                validLeaveApplication.getApplicationId(), employee.getEmployeeId()))
+                .thenReturn(Optional.empty());
+
+        Exception ex = assertThrows(RuntimeException.class, () -> {
+            leaveApplicationService.getManagerLeaveApplicationDetail("MGR001", validLeaveApplication.getApplicationId());
+        });
+
+        assertEquals("請假記錄不存在或您無權限查看", ex.getMessage());
+    }
+
+    @Test
     void applyLeave_success() {
         when(employeeService.findEmployeeByCode("EMP001")).thenReturn(employee);
         when(leaveTypeRepository.findById(1)).thenReturn(Optional.of(leaveType));
@@ -140,8 +223,6 @@ class LeaveApplicationServiceTest {
 
         when(employeeService.findEmployeeByCode(any())).thenReturn(employee);
         when(leaveTypeRepository.findById(1)).thenReturn(Optional.of(leaveType));
-        when(employeeLeaveBalanceRepository.findByEmployeeEmployeeIdAndLeaveTypeLeaveTypeIdAndLeaveYear(
-                eq(100), eq(1), anyInt())).thenReturn(Optional.of(balance));
 
         Exception ex = assertThrows(IllegalArgumentException.class,
                 () -> leaveApplicationService.applyLeave("EMP001", validRequest));
@@ -186,6 +267,62 @@ class LeaveApplicationServiceTest {
                 () -> leaveApplicationService.applyLeave("EMP001", validRequest));
         assertEquals("請填寫代理人", ex.getMessage());
     }
+
+    @Test
+    void updateLeaveApplication_success() {
+        // Arrange
+        int applicationId = 123;
+        validRequest.setStatus("待審核");
+
+        LeaveApplication existingApplication = new LeaveApplication();
+        existingApplication.setApplicationId(applicationId);
+        existingApplication.setEmployee(employee);
+        existingApplication.setStatus("待審核");
+
+        when(employeeService.findEmployeeByCode("EMP001")).thenReturn(employee);
+        when(leaveApplicationRepository.findByApplicationIdAndEmployeeEmployeeId(applicationId, 100))
+                .thenReturn(Optional.of(existingApplication));
+        when(leaveTypeRepository.findById(1)).thenReturn(Optional.of(leaveType));
+        when(employeeLeaveBalanceRepository.findByEmployeeEmployeeIdAndLeaveTypeLeaveTypeIdAndLeaveYear(
+                eq(100), eq(1), anyInt())).thenReturn(Optional.of(balance));
+        when(employeeService.findEmployeeByCode("EMP002")).thenReturn(proxy);
+        when(leaveApplicationRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // Act
+        LeaveApplicationResponseDTO response = leaveApplicationService.updateEmployeeLeaveApplication(
+                "EMP001", applicationId, validRequest);
+
+        // Assert
+        assertNotNull(response);
+        assertEquals(8, response.getLeaveHours());
+    }
+
+    @Test
+    void updateLeaveApplication_notFoundOrUnauthorized() {
+        when(employeeService.findEmployeeByCode("EMP001")).thenReturn(employee);
+        when(leaveApplicationRepository.findByApplicationIdAndEmployeeEmployeeId(anyInt(), anyInt()))
+                .thenReturn(Optional.empty());
+
+        Exception ex = assertThrows(RuntimeException.class,
+                () -> leaveApplicationService.updateEmployeeLeaveApplication("EMP001", 999, validRequest));
+        assertEquals("請假記錄不存在或無權限修改", ex.getMessage());
+    }
+
+    @Test
+    void updateLeaveApplication_alreadyReviewed() {
+        LeaveApplication reviewed = new LeaveApplication();
+        reviewed.setStatus("已核准");
+        reviewed.setEmployee(employee);
+
+        when(employeeService.findEmployeeByCode("EMP001")).thenReturn(employee);
+        when(leaveApplicationRepository.findByApplicationIdAndEmployeeEmployeeId(anyInt(), anyInt()))
+                .thenReturn(Optional.of(reviewed));
+
+        Exception ex = assertThrows(IllegalStateException.class,
+                () -> leaveApplicationService.updateEmployeeLeaveApplication("EMP001", 123, validRequest));
+        assertEquals("該筆請假記錄已被審核，無法修改", ex.getMessage());
+    }
+
 
     private void setupReviewScenario(String status, boolean shouldNotificationSucceed) {
         Integer leaveId = validLeaveApplication.getApplicationId();
