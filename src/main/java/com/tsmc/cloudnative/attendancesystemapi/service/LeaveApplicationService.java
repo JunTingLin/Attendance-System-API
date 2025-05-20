@@ -122,28 +122,13 @@ public class LeaveApplicationService {
 
         // 驗證是否需上傳附件
         if (Boolean.TRUE.equals(leaveType.getAttachmentRequired()) ){
-            if (updateDTO.getFilePath() == null || updateDTO.getFilePath().isBlank()){
+            if (updateDTO.getFilePath() == null || updateDTO.getFilePath().isBlank()) {
                 throw new IllegalArgumentException("此假別需上傳附件");
             }
         }
 
-        application.setLeaveType(leaveType);
-
-        // 更新欄位
-        // application.setLeaveType(new LeaveType(updateDTO.getLeaveTypeId())); // 可根據實際情況查資料或簡單包 ID
-        application.setStartDatetime(updateDTO.getStartDateTime());
-        application.setEndDatetime(updateDTO.getEndDateTime());
-        application.setLeaveHours(updateDTO.getLeaveHours());
-        application.setReason(updateDTO.getReason());
-
-        if (updateDTO.getProxyEmployeeCode() != null && !updateDTO.getProxyEmployeeCode().isBlank()) {
-            Employee proxy = employeeService.findEmployeeByCode(updateDTO.getProxyEmployeeCode());
-            application.setProxyEmployee(proxy);
-        }
-
-        application.setFilePath(updateDTO.getFilePath());
-        application.setFileName(updateDTO.getFileName());
-        application.setStatus(updateDTO.getStatus());
+        validateLeaveApplicationRequest(employee, updateDTO);
+        applyLeaveValues(application, employee, updateDTO, false);
 
         // 儲存更新後的資料
         leaveApplicationRepository.save(application);
