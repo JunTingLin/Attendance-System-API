@@ -165,14 +165,18 @@ public class LeaveApplicationService {
         }
 
         // 檢查請假時數是否超過餘額
-        int currentYear = LocalDateTime.now().getYear();
-        EmployeeLeaveBalance balance = employeeLeaveBalanceRepository
-                .findByEmployeeEmployeeIdAndLeaveTypeLeaveTypeIdAndLeaveYear(
-                        employee.getEmployeeId(), dto.getLeaveTypeId(), currentYear)
-                .orElseThrow(() -> new IllegalArgumentException("查無該假別的請假餘額"));
+        if (dto.getLeaveTypeId() != 4) {
+            int currentYear = LocalDateTime.now().getYear();
+            EmployeeLeaveBalance balance = employeeLeaveBalanceRepository
+                    .findByEmployeeEmployeeIdAndLeaveTypeLeaveTypeIdAndLeaveYear(
+                            employee.getEmployeeId(), dto.getLeaveTypeId(), currentYear)
+                    .orElseThrow(() -> new IllegalArgumentException("查無該假別的請假餘額"));
 
-        if (dto.getLeaveHours() > balance.getRemainingHours()) {
-            throw new IllegalArgumentException("請假時數超過可用餘額");
+            if (dto.getLeaveHours() > balance.getRemainingHours()) {
+                throw new IllegalArgumentException("請假時數超過可用餘額");
+            }
+        } else {
+            log.info("跳過請假餘額檢查，假別ID = 4");
         }
     }
 
