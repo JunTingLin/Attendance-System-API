@@ -1,0 +1,32 @@
+options:
+  logging: CLOUD_LOGGING_ONLY
+
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'asia-east1-docker.pkg.dev/tsmc-attendance-system-458811/attendance-system/api:$COMMIT_SHA', '.']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'asia-east1-docker.pkg.dev/tsmc-attendance-system-458811/attendance-system/api:$COMMIT_SHA']
+
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'attendance-system-api'
+      - '--image'
+      - 'asia-east1-docker.pkg.dev/tsmc-attendance-system-458811/attendance-system/api:$COMMIT_SHA'
+      - '--region'
+      - 'asia-east1'
+      - '--platform'
+      - 'managed'
+      - '--vpc-connector'
+      - 'attendance-vpc-connector'
+      - '--add-cloudsql-instances'
+      - '${_CLOUDSQL_INSTANCE}'
+
+substitutions:
+  _CLOUDSQL_INSTANCE: 'tsmc-attendance-system-458811:asia-east1:attendance-mysql-instance'
+
+images:
+  - 'asia-east1-docker.pkg.dev/tsmc-attendance-system-458811/attendance-system/api:$COMMIT_SHA'
