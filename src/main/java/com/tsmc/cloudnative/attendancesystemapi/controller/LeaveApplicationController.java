@@ -54,7 +54,7 @@ public class LeaveApplicationController {
     public ApiResponse<LeaveApplicationResponseDTO> updateEmployeeLeaveApplication(
             Authentication authentication,
             @PathVariable("id") Integer applicationId,
-            @RequestBody LeaveApplicationRequestDTO updateRequest) {
+            @RequestBody @Valid LeaveApplicationRequestDTO updateRequest) {
 
         String employeeCode = authentication.getName();
         log.info("用戶[{}]欲修改其請假記錄[{}]", employeeCode, applicationId);

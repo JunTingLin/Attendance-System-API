@@ -5,6 +5,7 @@ import com.tsmc.cloudnative.attendancesystemapi.dto.LeaveApplicationResponseDTO;
 import com.tsmc.cloudnative.attendancesystemapi.service.LeaveApplicationService;
 import com.tsmc.cloudnative.attendancesystemapi.common.ApiResponse;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -16,6 +17,7 @@ import static org.mockito.Mockito.*;
 
 import java.time.LocalDateTime;
 
+@Tag("unit")
 public class LeaveApplicationControllerTest {
 
     @InjectMocks

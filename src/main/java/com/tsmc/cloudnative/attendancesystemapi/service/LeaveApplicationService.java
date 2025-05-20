@@ -98,54 +98,6 @@ public class LeaveApplicationService {
         return convertToResponseDTO(application);
     }
 
-    public LeaveApplicationResponseDTO updateEmployeeLeaveApplication(
-            String employeeCode, Integer applicationId, LeaveApplicationRequestDTO updateDTO) {
-
-        log.debug("員工[{}]請求更新請假紀錄[{}]", employeeCode, applicationId);
-
-        // 驗證員工身分
-        Employee employee = employeeService.findEmployeeByCode(employeeCode);
-
-        // 查詢請假紀錄是否存在並屬於該員工
-        LeaveApplication application = leaveApplicationRepository
-                .findByApplicationIdAndEmployeeEmployeeId(applicationId, employee.getEmployeeId())
-                .orElseThrow(() -> new RuntimeException("請假記錄不存在或無權限修改"));
-
-        // 僅允許修改尚未審核的紀錄
-        if (!"待審核".equalsIgnoreCase(application.getStatus())) {
-            throw new IllegalStateException("該筆請假記錄已被審核，無法修改");
-        }
-
-        // 透過 leaveTypeRepository 抓 Entity
-        LeaveType leaveType = leaveTypeRepository.findById(updateDTO.getLeaveTypeId())
-                .orElseThrow(() -> new RuntimeException("無效的請假類型"));
-
-        application.setLeaveType(leaveType);
-
-        // 更新欄位
-        // application.setLeaveType(new LeaveType(updateDTO.getLeaveTypeId())); // 可根據實際情況查資料或簡單包 ID
-        application.setStartDatetime(updateDTO.getStartDateTime());
-        application.setEndDatetime(updateDTO.getEndDateTime());
-        application.setLeaveHours(updateDTO.getLeaveHours());
-        application.setReason(updateDTO.getReason());
-
-        if (updateDTO.getProxyEmployeeCode() != null && !updateDTO.getProxyEmployeeCode().isBlank()) {
-            Employee proxy = employeeService.findEmployeeByCode(updateDTO.getProxyEmployeeCode());
-            application.setProxyEmployee(proxy);
-        }
-
-        application.setFilePath(updateDTO.getFilePath());
-        application.setFileName(updateDTO.getFileName());
-        application.setStatus(updateDTO.getStatus());
-
-        // 儲存更新後的資料
-        leaveApplicationRepository.save(application);
-
-        log.debug("員工[{}]的請假記錄[{}]更新成功", employeeCode, applicationId);
-
-        return convertToResponseDTO(application);
-    }
-
 
     private LeaveApplicationListDTO convertToListDTO(LeaveApplication application) {
         return new LeaveApplicationListDTO(
@@ -195,67 +147,110 @@ public class LeaveApplicationService {
         );
     }
 
+    private void validateLeaveApplicationRequest(Employee employee, LeaveApplicationRequestDTO dto) {
+        // 驗證假別是否存在
+        LeaveType leaveType = leaveTypeRepository.findById(dto.getLeaveTypeId())
+                .orElseThrow(() -> new IllegalArgumentException("無效的假別ID"));
 
-    public LeaveApplicationResponseDTO  applyLeave(String employeeCode, LeaveApplicationRequestDTO requestDTO){
-
-        Employee employee = employeeService.findEmployeeByCode(employeeCode);
-
-
-        // 驗證假別合法
-        LeaveType leaveType = leaveTypeRepository.findById(requestDTO.getLeaveTypeId())
-            .orElseThrow(() -> new IllegalArgumentException("無效的假別ID"));
-
-        // 驗證是否需上傳附件
-        if (Boolean.TRUE.equals(leaveType.getAttachmentRequired()) ){
-            if (requestDTO.getFilePath() == null || requestDTO.getFilePath().isBlank()){
+        // 驗證是否需要上傳附件
+        if (Boolean.TRUE.equals(leaveType.getAttachmentRequired())) {
+            if (dto.getFilePath() == null || dto.getFilePath().isBlank()) {
                 throw new IllegalArgumentException("此假別需上傳附件");
             }
         }
 
-        int currentYear = LocalDateTime.now().getYear();
-        EmployeeLeaveBalance balance = employeeLeaveBalanceRepository
-            .findByEmployeeEmployeeIdAndLeaveTypeLeaveTypeIdAndLeaveYear(
-                employee.getEmployeeId(),
-                requestDTO.getLeaveTypeId(),
-                currentYear
-            )
-            .orElseThrow(() -> new IllegalArgumentException("查無該假別的請假餘額"));
-
         // 驗證開始時間需早於結束時間
-        if (!requestDTO.getStartDateTime().isBefore(requestDTO.getEndDateTime())) {
+        if (!dto.getStartDateTime().isBefore(dto.getEndDateTime())) {
             throw new IllegalArgumentException("開始時間需早於結束時間");
         }
 
-        // 驗證請假時數是否超過餘額
-        if (requestDTO.getLeaveHours() > balance.getRemainingHours()) {
+        // 檢查請假時數是否超過餘額
+        int currentYear = LocalDateTime.now().getYear();
+        EmployeeLeaveBalance balance = employeeLeaveBalanceRepository
+                .findByEmployeeEmployeeIdAndLeaveTypeLeaveTypeIdAndLeaveYear(
+                        employee.getEmployeeId(), dto.getLeaveTypeId(), currentYear)
+                .orElseThrow(() -> new IllegalArgumentException("查無該假別的請假餘額"));
+
+        if (dto.getLeaveHours() > balance.getRemainingHours()) {
             throw new IllegalArgumentException("請假時數超過可用餘額");
         }
+    }
 
+    private void applyLeaveValues(LeaveApplication application,
+                                  Employee employee,
+                                  LeaveApplicationRequestDTO dto,
+                                  boolean isNewApplication) {
+        LeaveType leaveType = leaveTypeRepository.findById(dto.getLeaveTypeId())
+                .orElseThrow(() -> new IllegalArgumentException("無效的假別ID"));
 
-        LeaveApplication application = new LeaveApplication();
         application.setEmployee(employee);
         application.setLeaveType(leaveType);
-        application.setStartDatetime(requestDTO.getStartDateTime());
-        application.setEndDatetime(requestDTO.getEndDateTime());
-        application.setLeaveHours(requestDTO.getLeaveHours());
-        application.setReason(requestDTO.getReason());
+        application.setStartDatetime(dto.getStartDateTime());
+        application.setEndDatetime(dto.getEndDateTime());
+        application.setLeaveHours(dto.getLeaveHours());
+        application.setReason(dto.getReason());
+        application.setFilePath(dto.getFilePath());
+        application.setFileName(dto.getFileName());
 
-        application.setApplicationDatetime((LocalDateTime.now()));
-        application.setStatus("待審核");
-        application.setFilePath(requestDTO.getFilePath());
-        application.setFileName(requestDTO.getFileName());
+        if (isNewApplication) {
+            application.setApplicationDatetime(LocalDateTime.now());
+            application.setStatus("待審核");
+        } else {
+            application.setStatus(dto.getStatus()); // 更新才允許更改狀態
+        }
 
         // 取得代理人
-        if (requestDTO.getProxyEmployeeCode() == null || requestDTO.getProxyEmployeeCode().isBlank()) {
+        if (dto.getProxyEmployeeCode() == null || dto.getProxyEmployeeCode().isBlank()) {
             throw new IllegalArgumentException("請填寫代理人");
         } else {
-            Employee proxy = employeeService.findEmployeeByCode(requestDTO.getProxyEmployeeCode());
+            Employee proxy = employeeService.findEmployeeByCode(dto.getProxyEmployeeCode());
             application.setProxyEmployee(proxy);
         }
+    }
+
+
+
+    public LeaveApplicationResponseDTO  applyLeave(String employeeCode, LeaveApplicationRequestDTO requestDTO){
+        log.debug("員工[{}]新增請假紀錄", employeeCode);
+        Employee employee = employeeService.findEmployeeByCode(employeeCode);
+
+        validateLeaveApplicationRequest(employee, requestDTO);
+
+        LeaveApplication application = new LeaveApplication();
+        applyLeaveValues(application, employee, requestDTO, true);
 
         LeaveApplication saved = leaveApplicationRepository.save(application);
         return convertToResponseDTO(saved);
 
+    }
+
+    public LeaveApplicationResponseDTO updateEmployeeLeaveApplication(
+            String employeeCode, Integer applicationId, LeaveApplicationRequestDTO updateDTO) {
+
+        log.debug("員工[{}]請求更新請假紀錄[{}]", employeeCode, applicationId);
+
+        // 驗證員工身分
+        Employee employee = employeeService.findEmployeeByCode(employeeCode);
+
+        // 查詢請假紀錄是否存在並屬於該員工
+        LeaveApplication application = leaveApplicationRepository
+                .findByApplicationIdAndEmployeeEmployeeId(applicationId, employee.getEmployeeId())
+                .orElseThrow(() -> new RuntimeException("請假記錄不存在或無權限修改"));
+
+        // 僅允許修改尚未審核的紀錄
+        if (!"待審核".equalsIgnoreCase(application.getStatus())) {
+            throw new IllegalStateException("該筆請假記錄已被審核，無法修改");
+        }
+
+        validateLeaveApplicationRequest(employee, updateDTO);
+        applyLeaveValues(application, employee, updateDTO, false);
+
+        // 儲存更新後的資料
+        leaveApplicationRepository.save(application);
+
+        log.debug("員工[{}]的請假記錄[{}]更新成功", employeeCode, applicationId);
+
+        return convertToResponseDTO(application);
     }
 
     public LeaveApplicationResponseDTO approveLeaveApplication(Integer leaveId, String approvalReason) {
