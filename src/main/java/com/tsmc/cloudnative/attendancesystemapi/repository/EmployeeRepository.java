@@ -14,6 +14,6 @@ public interface EmployeeRepository extends JpaRepository<Employee, Integer> {
 
     // 查詢同部門、同職級的員工作為代理人選項（排除自己）
     // 這裡假如覺得Spring Data JPA的方法命名太長要寫SQL @Query 也是沒問題
-    List<Employee> findByDepartmentDepartmentIdAndPositionPositionLevelAndEmployeeIdNotOrderByEmployeeName(
-            Integer departmentId, Integer positionLevel, Integer employeeId);
+    List<Employee> findByDepartmentDepartmentIdAndEmployeeIdNotOrderByEmployeeName(
+            Integer departmentId, Integer employeeId);
 }
