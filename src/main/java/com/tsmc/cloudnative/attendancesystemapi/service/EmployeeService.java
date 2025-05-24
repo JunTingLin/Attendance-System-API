@@ -29,14 +29,13 @@ public class EmployeeService {
 
         Employee employee = findEmployeeByCode(employeeCode);
         Integer departmentId = employee.getDepartment().getDepartmentId();
-        Integer positionLevel = employee.getPosition().getPositionLevel();
         Integer employeeId = employee.getEmployeeId();
 
-        log.debug("員工部門ID: {}, 職級: {}", departmentId, positionLevel);
+        log.debug("員工部門ID: {}", departmentId);
 
-        // 查詢同部門同職級的員工
-        List<Employee> potentialProxies = employeeRepository.findByDepartmentDepartmentIdAndPositionPositionLevelAndEmployeeIdNotOrderByEmployeeName(
-                departmentId, positionLevel, employeeId);
+        // 查詢同部門的員工
+        List<Employee> potentialProxies = employeeRepository.findByDepartmentDepartmentIdAndEmployeeIdNotOrderByEmployeeName(
+                departmentId, employeeId);
 
         log.debug("找到 {} 位潛在代理人", potentialProxies.size());
 
