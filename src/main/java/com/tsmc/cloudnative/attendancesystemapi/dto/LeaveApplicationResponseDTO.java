@@ -16,6 +16,7 @@ import org.checkerframework.checker.units.qual.N;
 public class LeaveApplicationResponseDTO {
     private Integer leaveApplicationId;
     private Integer employeeId;
+    private String employeeCode;
     private String employeeName;
     private Integer leaveTypeId;
     private String leaveTypeName;
