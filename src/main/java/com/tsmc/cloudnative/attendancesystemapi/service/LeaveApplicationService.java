@@ -141,6 +141,8 @@ public class LeaveApplicationService {
     private LeaveApplicationListDTO convertToListDTO(LeaveApplication application) {
         return new LeaveApplicationListDTO(
                 application.getApplicationId(),
+                application.getEmployee().getEmployeeCode(),
+                application.getEmployee().getEmployeeName(),
                 application.getLeaveType().getLeaveTypeName(),
                 application.getStartDatetime(),
                 application.getEndDatetime(),
