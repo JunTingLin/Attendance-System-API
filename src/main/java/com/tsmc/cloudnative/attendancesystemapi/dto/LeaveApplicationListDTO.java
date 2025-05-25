@@ -11,6 +11,8 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class LeaveApplicationListDTO {
     private Integer applicationId;
+    private String employeeCode;
+    private String employeeName;
     private String leaveTypeName;
     private LocalDateTime startDateTime;
     private LocalDateTime endDateTime;
