@@ -169,6 +169,7 @@ public class LeaveApplicationService {
         return new LeaveApplicationResponseDTO(
                 application.getApplicationId(),
                 application.getEmployee().getEmployeeId(),
+                application.getEmployee().getEmployeeCode(),
                 application.getEmployee().getEmployeeName(),
                 application.getLeaveType().getLeaveTypeId(),
                 application.getLeaveType().getLeaveTypeName(),
