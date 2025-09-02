@@ -2,11 +2,13 @@
 
 本專案為使用 **Spring Boot**、**Spring Security** 和 **Spring Data JPA** 等框架架構的請假系統後端 API。此專案主要提供使用者身份驗證、授權功能以及用戶資料管理的 RESTful API 服務。此外還整合了 Swagger 提供互動式 API 文件。
 
-**前端專案與資料庫參見**:
+**前端專案、資料庫設計、雲基礎設施 請參見**:
+
++ [Attendance-System-frontend](https://github.com/zzronggg/Attendance-System-frontend/tree/main)
 
 + [Attendance-System-db](https://github.com/JunTingLin/Attendance-System-db)
 
-+ [Attendance-System-frontend](https://github.com/zzronggg/Attendance-System-frontend/tree/main)
++ [Attendance-System-Infra](https://github.com/JunTingLin/Attendance-System-Infra)
 
 ---
 
